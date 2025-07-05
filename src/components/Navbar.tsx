@@ -33,7 +33,7 @@ const routes = [
   { label: "Orders", href: "/orders" },
   { label: "Products", href: "/products" },
   { label: "Analytics", href: "/analytics" },
-  { label: "Settings", href: "/settings" },
+  { label: "Customers", href: "/customers" },
   { label: "Profile", href: "/profile" },
   { label: "Help", href: "/help" },
 ];

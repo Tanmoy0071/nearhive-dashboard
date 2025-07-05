@@ -67,7 +67,7 @@ const items = [
   },
   {
     title: "Customers",
-    url: "#",
+    url: "/customers",
     icon: User,
   },
   {
@@ -279,5 +279,7 @@ const AppSidebar = () => {
 };
 
 //change
+
+
 
 export default AppSidebar;
