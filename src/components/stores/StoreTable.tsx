@@ -27,22 +27,21 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 
-const dummyData = [
-  {
-    id: "ST001",
-    name: "Fresh Mart",
-    timing: "8 AM - 10 PM",
-    orders: 145,
-    sales: 20000,
-    revenue: 16000,
-    commission: 4000,
-    ranking: "#3",
-    prepTime: "20m",
-    acceptanceRate: "95%",
-    rating: "4.8",
-  },
-  // Add more stores here...
-]
+const dummyData = Array.from({ length: 45 }, (_, i) => ({
+  id: `ST${(i + 1).toString().padStart(3, "0")}`,
+  name: `Store ${i + 1}`,
+  timing: "8 AM - 10 PM",
+  orders: Math.floor(Math.random() * 200),
+  sales: Math.floor(Math.random() * 50000),
+  revenue: Math.floor(Math.random() * 40000),
+  commission: Math.floor(Math.random() * 10000),
+  ranking: `#${Math.floor(Math.random() * 10) + 1}`,
+  prepTime: `${10 + Math.floor(Math.random() * 30)}m`,
+  acceptanceRate: `${80 + Math.floor(Math.random() * 20)}%`,
+  rating: (4 + Math.random()).toFixed(1),
+}))
+
+const ITEMS_PER_PAGE = 10
 
 function StoreTable() {
   const [search, setSearch] = useState("")
@@ -59,9 +58,16 @@ function StoreTable() {
     location: "",
     upi: "",
   })
+  const [currentPage, setCurrentPage] = useState(1)
 
   const filtered = dummyData.filter((store) =>
     store.name.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE)
+  const paginatedData = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
   )
 
   return (
@@ -71,10 +77,12 @@ function StoreTable() {
         <Input
           placeholder="Search store..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value)
+            setCurrentPage(1) // reset page on search
+          }}
           className="max-w-sm"
         />
-
         <Button onClick={() => setShowVerificationDialog(true)}>
           Create Your Store
         </Button>
@@ -100,8 +108,8 @@ function StoreTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length > 0 ? (
-              filtered.map((store, idx) => (
+            {paginatedData.length > 0 ? (
+              paginatedData.map((store, idx) => (
                 <TableRow key={idx}>
                   <TableCell>{store.id}</TableCell>
                   <TableCell>{store.name}</TableCell>
@@ -136,14 +144,29 @@ function StoreTable() {
         </Table>
       </div>
 
-      {/* Sheet for managing store */}
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4">
+          <Button variant="outline" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button variant="outline" onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages}>
+            Next
+          </Button>
+        </div>
+      )}
+
+      {/* Store Management Sheet */}
       {selectedStore && (
         <Sheet open={!!selectedStore} onOpenChange={() => setSelectedStore(null)}>
           <SheetContent className="w-full sm:w-[400px]">
             <SheetHeader>
               <SheetTitle>Manage Store: {selectedStore.name}</SheetTitle>
             </SheetHeader>
-            <div className="mt-6 space-y-6 text-sm">
+            <div className="mt-6 space-y-6 text-sm px-7">
               <div className="flex items-center justify-between">
                 <span>Store Open</span>
                 <Switch defaultChecked />
@@ -161,7 +184,7 @@ function StoreTable() {
         </Sheet>
       )}
 
-      {/* Step 1: Email Verification Dialog */}
+      {/* Email Verification Dialog */}
       <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
         <DialogContent>
           <DialogHeader>
@@ -177,7 +200,6 @@ function StoreTable() {
           <DialogFooter className="mt-4">
             <Button
               onClick={() => {
-                // You could do API validation here before proceeding
                 setShowVerificationDialog(false)
                 setShowCreateFormDialog(true)
               }}
@@ -188,7 +210,7 @@ function StoreTable() {
         </DialogContent>
       </Dialog>
 
-      {/* Step 2: Store Info Form Dialog */}
+      {/* Store Creation Form Dialog */}
       <Dialog open={showCreateFormDialog} onOpenChange={setShowCreateFormDialog}>
         <DialogContent>
           <DialogHeader>
@@ -234,7 +256,6 @@ function StoreTable() {
           <DialogFooter className="mt-4">
             <Button
               onClick={() => {
-                // Here you could POST to backend or show confirmation
                 console.log("Store Created:", storeForm)
                 setShowCreateFormDialog(false)
               }}
