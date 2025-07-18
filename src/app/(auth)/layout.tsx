@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import "@/app/globals.css";
 import { Urbanist } from "next/font/google";
-import { cookies } from "next/headers";
+import { AuthProvider } from "@/providers/AuthContextProvider";
 
 const urbanist = Urbanist({
   variable: "--font-urbanist",
   subsets: ["latin"],
   display: "swap", // Optional: improves performance
 });
-
 
 export const metadata: Metadata = {
   title: "NearHive-Dashboard",
@@ -23,9 +22,8 @@ export default function AuthLayout({
   return (
     <html lang="en">
       <body>
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
 }
-

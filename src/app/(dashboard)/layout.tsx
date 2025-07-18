@@ -4,16 +4,16 @@ import "@/app/globals.css";
 import AppSidebar from "@/components/AppSidebar";
 import { Urbanist } from "next/font/google";
 import Navbar from "@/components/Navbar";
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { ThemeProvider } from "@/providers/ThemeProvider";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { cookies } from "next/headers";
+import { AuthProvider } from "@/providers/AuthContextProvider";
 
 const urbanist = Urbanist({
   variable: "--font-urbanist",
   subsets: ["latin"],
   display: "swap", // Optional: improves performance
 });
-
 
 export const metadata: Metadata = {
   title: "NearHive-Dashboard",
@@ -25,29 +25,28 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
 
-  const cookieStore = await cookies()
-  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"
-  
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${urbanist.variable} antialiased flex`}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <SidebarProvider defaultOpen={defaultOpen}>
-            <AppSidebar />
-            <main className="w-full">
-              <Navbar />
-              <div className="px-4">{children}</div>
-            </main>
-          </SidebarProvider>
-        </ThemeProvider>
+      <body className={`${urbanist.variable} antialiased flex`}>
+        <AuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <SidebarProvider defaultOpen={defaultOpen}>
+              <AppSidebar />
+              <main className="w-full">
+                <Navbar />
+                <div className="px-4">{children}</div>
+              </main>
+            </SidebarProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );
