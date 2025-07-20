@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      console.log(user, "--Auth state--");
+      // console.log(user, "--Auth state--");
     });
 
     return () => unsubscribe();

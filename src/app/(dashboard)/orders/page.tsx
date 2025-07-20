@@ -1,12 +1,23 @@
+'use client'
 import { ChartBarLabelCustom } from '@/components/orders/Barchart'
 import { CancelledOrdersBox } from '@/components/orders/Cancelledorderbox'
 import { ChartPieSimple } from '@/components/orders/Cancelledvsdelivered'
 import { ChartBarMixed } from '@/components/orders/HighestLocations'
 import { ChartRadarDots } from '@/components/orders/Lateandfastdeliverycounts'
 import { DataTableDemo } from '@/components/orders/OrderTable'
-import React from 'react'
+import { getAllOrders } from '@/services/orders'
+import React, { useEffect } from 'react'
 
-function Orders() {
+ function Orders() {
+
+
+  useEffect(()=>{
+    getAllOrders()
+  },[])
+  
+
+
+  
   return (
     <div className='font-main'>
         <h1 className='font-bold lg:text-4xl sm:text-sm'>Order Analytics</h1>

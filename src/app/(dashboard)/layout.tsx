@@ -4,10 +4,9 @@ import "@/app/globals.css";
 import AppSidebar from "@/components/AppSidebar";
 import { Urbanist } from "next/font/google";
 import Navbar from "@/components/Navbar";
-import { ThemeProvider } from "@/providers/ThemeProvider";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { cookies } from "next/headers";
-import { AuthProvider } from "@/providers/AuthContextProvider";
+import Providers from "@/providers/Providers";
 
 const urbanist = Urbanist({
   variable: "--font-urbanist",
@@ -31,22 +30,15 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${urbanist.variable} antialiased flex`}>
-        <AuthProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <SidebarProvider defaultOpen={defaultOpen}>
-              <AppSidebar />
-              <main className="w-full">
-                <Navbar />
-                <div className="px-4">{children}</div>
-              </main>
-            </SidebarProvider>
-          </ThemeProvider>
-        </AuthProvider>
+        <Providers>
+          <SidebarProvider defaultOpen={defaultOpen}>
+            <AppSidebar />
+            <main className="w-full">
+              <Navbar />
+              <div className="px-4">{children}</div>
+            </main>
+          </SidebarProvider>
+        </Providers>
       </body>
     </html>
   );
