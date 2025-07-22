@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, db, googleProvider } from "@/firebase/firebase-client";
 import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore";
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
-import { AuthContextType, User } from "@/types/types";
+import { AuthContextType, AuthUser } from "@/types/auth";
 import { FirestoreService } from "@/firebase/firestoreService";
 
 const AuthContext = createContext<AuthContextType>({
@@ -24,7 +24,7 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
