@@ -62,7 +62,7 @@ const items = [
   },
   {
     title: "Middleman",
-    url: "#",
+    url: "/middleman",
     icon: Truck
   },
   {
@@ -77,7 +77,7 @@ const items = [
   },
   {
     title: "Campaigns",
-    url: "#",
+    url: "/campaigns",
     icon: Flag,
   },
 ];
@@ -133,20 +133,20 @@ const AppSidebar = () => {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <Link href="/#">
+                      <Link href="/stores">
                         <Pizza />
                         Food
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                  <SidebarMenuItem>
+                  {/* <SidebarMenuItem>
                     <SidebarMenuButton asChild>
                       <Link href="/#">
                         <Boxes/>
                         Grocery
                       </Link>
                     </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  </SidebarMenuItem> */}
                 </SidebarMenu>
               </SidebarGroupContent>
             </CollapsibleContent>
@@ -165,28 +165,21 @@ const AppSidebar = () => {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <Link href="/#">
+                      <Link href="/products">
                         <Pizza />
                         All Products (Food)
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                  <SidebarMenuItem>
+                  {/* <SidebarMenuItem>
                     <SidebarMenuButton asChild>
                       <Link href="/#">
                         <Boxes />
                         All Products (Grocery)
                       </Link>
                     </SidebarMenuButton>
-                  </SidebarMenuItem>
-                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <Link href="/#">
-                        <Plus />
-                        Add Product
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  </SidebarMenuItem> */}
+                  
                 </SidebarMenu>
               </SidebarGroupContent>
             </CollapsibleContent>
@@ -206,7 +199,7 @@ const AppSidebar = () => {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <Link href="/#">
+                      <Link href="/payments">
                      <IndianRupee />
                         Store
                       </Link>
@@ -214,9 +207,25 @@ const AppSidebar = () => {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <Link href="/#">
+                      <Link href="/middleman">
                     <IndianRupee />
                         Middleman
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                     <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <Link href="/refunds">
+                    <IndianRupee />
+                        Refunds
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                    <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <Link href="/trackrecord">
+                    <IndianRupee />
+                        Track Records
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

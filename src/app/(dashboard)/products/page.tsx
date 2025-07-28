@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { Input } from "@/components/ui/input"
 import ProductTable from '@/components/products/producttable'
+import AddProducts from '@/components/products/addproducts'
 
  
 
@@ -12,7 +13,8 @@ function Products() {
   return (
     <>
     <div className='font-main'>
-      <h1 className="font-bold lg:text-4xl sm:text-sm">Products (Food)</h1>
+      <h1 className="font-bold lg:text-4xl sm:text-sm mb-2">Products (Food)</h1>
+      <AddProducts/>
       <Input
         placeholder="Search Products..."
         value={searchQuery}
