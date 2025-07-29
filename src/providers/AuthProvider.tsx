@@ -4,12 +4,12 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, db, googleProvider } from "@/firebase/firebase-client";
 import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore";
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
-import { AuthContextType, AuthUser } from "@/types/auth";
+import { AuthContextType, AuthUser } from "@/types/backend/auth";
 import { FirestoreService } from "@/firebase/firestoreService";
+import { getAdminByEmail } from "@/services/auth";
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  loading: true,
 
   signInWithGoogle: async () => {
     throw new Error("AuthProvider not found");
@@ -25,17 +25,11 @@ export function useAuth() {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user?.email) {
-        const adminDoc = (
-          await FirestoreService.getWhere("Authorized-Admins/document/admin", [
-            ["email", "==", user.email],
-          ])
-        )[0] as { id: string; email: string };
-
+        const adminDoc = await getAdminByEmail(user.email)
         console.log(adminDoc, "--admin doc--");
 
         if (adminDoc) {
@@ -82,7 +76,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value: AuthContextType = {
     user,
-    loading,
     signInWithGoogle: googleLogin,
     signOut: logout,
   };

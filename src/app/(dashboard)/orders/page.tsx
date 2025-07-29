@@ -5,29 +5,10 @@ import { ChartPieSimple } from "@/components/orders/Cancelledvsdelivered";
 import { ChartBarMixed } from "@/components/orders/HighestLocations";
 import { ChartRadarDots } from "@/components/orders/Lateandfastdeliverycounts";
 import { DataTableDemo } from "@/components/orders/OrderTable";
-import { FirestoreService } from "@/firebase/firestoreService";
-import { getAllOrders } from "@/services/orders";
-import { useQuery } from "@tanstack/react-query";
-import React, { useEffect } from "react";
+import React from "react";
 
-async function fetchUsers() {
-
-  console.log("refetchinggg" , Date.now());
-  
-  return await FirestoreService.getAllDocs("Url");
-}
 
 function Orders() {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["users"],
-    queryFn: fetchUsers,
-    refetchOnWindowFocus : false ,
-    refetchInterval: 10000
-
-  });
-
-  
-  console.log(data);
   
 
   return (
