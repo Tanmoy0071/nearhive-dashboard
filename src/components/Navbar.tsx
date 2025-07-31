@@ -27,6 +27,7 @@ import {
 } from "./ui/command";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/providers/AuthProvider";
 
 const routes = [
   { label: "Home", href: "/" },
@@ -43,6 +44,16 @@ const Navbar = () => {
   const { toggleSidebar } = useSidebar();
   const [open, setOpen] = useState(false);
   const router = useRouter();
+
+  const {signOut } = useAuth()
+
+  const handleLogout = async () =>{
+
+    await signOut()
+
+    return router.push('/login')
+
+  }
 
   // Keyboard shortcut for ⌘K / Ctrl+K
   useEffect(() => {
@@ -107,7 +118,7 @@ const Navbar = () => {
             <DropdownMenuContent sideOffset={10}>
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem >
                 <User className="h-[1.2rem] w-[1.2rem] mr-2" />
                 Profile
               </DropdownMenuItem>
@@ -115,7 +126,7 @@ const Navbar = () => {
                 <Settings className="h-[1.2rem] w-[1.2rem] mr-2" />
                 Settings
               </DropdownMenuItem>
-              <DropdownMenuItem variant="destructive">
+              <DropdownMenuItem variant="destructive" onClick={handleLogout}>
                 <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" />
                 Logout
               </DropdownMenuItem>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/firebase/firebase-admin';
+import { dump } from '@/utils/dump';
 
 
 export async function GET(req: NextRequest) {
@@ -11,7 +12,10 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-        const decodedToken = await adminAuth.verifyIdToken(token);
+
+         const decodedToken = await adminAuth.verifySessionCookie(token, true);
+
+         dump("api verifying ");
 
         const adminSubcollectionRef = adminDb
             .collection("Authorized-Admins")

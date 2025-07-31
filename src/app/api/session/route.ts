@@ -2,21 +2,26 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { adminAuth } from "@/firebase/firebase-admin";
+import { dump } from "@/utils/dump";
 
 export async function POST(req: Request) {
   const { token } = await req.json();
 
-  try {
-    // Optional: verify the token here to be extra safe
-   await adminAuth.verifyIdToken(token);
+  const expiresIn = 24 * 60 * 60 * 1000 ;
 
+  try {
+    const sessionCookie = await adminAuth.createSessionCookie(token, { expiresIn });
+
+    // const res = await adminAuth.verifyIdToken(token)
+
+    dump("creating session");
 
     // Set HTTP-only cookie
-    (await cookies()).set("__session", token, {
+    (await cookies()).set("__session", sessionCookie, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 60 * 60 * 24 * 1, // 1 day
+      maxAge: expiresIn / 1000
     });
 
     return NextResponse.json({ success: true });

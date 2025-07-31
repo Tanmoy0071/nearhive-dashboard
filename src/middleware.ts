@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { dump } from './utils/dump';
 
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;

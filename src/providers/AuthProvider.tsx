@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // console.log(user, "--Auth state--");
+      //  console.log(user, "--Auth state--");
     });
 
     return () => unsubscribe();
@@ -51,26 +51,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const result = await signInWithPopup(auth, googleProvider);
 
     // Check if user exists in Firestore
-    await sendToken(await result.user.getIdToken());
-  };
+    const token = await result.user.getIdToken();
 
-  const sendToken = async (token: string) => {
     await fetch("/api/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token }),
     });
+
   };
 
-  const removeToken = async () => {
+  const logout = async () => {
     await fetch("/api/logout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
     });
-  };
 
-  const logout = async () => {
-    await removeToken();
     return signOut(auth);
   };
 
