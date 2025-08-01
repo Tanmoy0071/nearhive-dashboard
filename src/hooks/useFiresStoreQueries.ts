@@ -1,5 +1,9 @@
+import { fetchCustomers } from "@/services/customers";
 import { fetchMiddlemen } from "@/services/middlemen";
+import { fetchOrders } from "@/services/orders";
+import { fetchProducts } from "@/services/products";
 import { fetchStores } from "@/services/stores";
+import { fetchUsers } from "@/services/users";
 import { useQuery } from "@tanstack/react-query";
 
 // Hook for stores
@@ -23,4 +27,51 @@ export function useMiddlemenQuery() {
         // refetchInterval : 5000
     });
 }
+
+// Hook for users
+export function useUsersQuery() {
+    return useQuery({
+        queryKey: ["users"],
+        queryFn: fetchUsers ,
+        refetchOnWindowFocus : false ,
+        refetchOnMount : false ,
+        // refetchInterval : 5000
+    });
+}
+
+
+// Hook for products
+export function useProductsQuery() {
+    return useQuery({
+        queryKey: ["products"],
+        queryFn: fetchProducts ,
+        refetchOnWindowFocus : false ,
+        refetchOnMount : false ,
+        // refetchInterval : 5000
+    });
+}
+
+// Hook for customers
+export function useCustomersQuery() {
+    return useQuery({
+        queryKey: ["customers"],
+        queryFn: fetchCustomers ,
+        refetchOnWindowFocus : false ,
+        refetchOnMount : false ,
+        // refetchInterval : 5000
+    });
+}
+
+// Hook for orders
+export function useOrdersQuery() {
+    return useQuery({
+        queryKey: ["orders"],
+        queryFn: fetchOrders ,
+        refetchOnWindowFocus : false ,
+        refetchOnMount : false ,
+        // refetchInterval : 5000
+    });
+}
+
+
 

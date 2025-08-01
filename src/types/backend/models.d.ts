@@ -43,23 +43,25 @@ export type Middlemen = {
   middlemanId: string;
   password: string;
   phoneNumber: string;
-  registrationDate: Timestamp ; // Timestamp or ISO string
+  registrationDate: Timestamp; // Timestamp or ISO string
   todayEarning: number;
   upiId: string;
   vehicleRegistrationNumber: string;
 };
 
 export type User = {
+  userId: string;
   addresses: string[]; // Array of address strings
-  createdAt: Timestamp ; // Firestore timestamp or ISO string
+  createdAt: Timestamp; // Firestore timestamp or ISO string
   email: string;
   firstName: string;
   lastName: string;
-  lastUpdated: Timestamp ; // Firestore timestamp or ISO string
+  lastUpdated: Timestamp; // Firestore timestamp or ISO string
   likedPosts: string[]; // Array of post IDs or titles
   location: string;
   phoneNumber: string;
   photoURL: string;
+  storeId: string | null;
 };
 
 
@@ -68,9 +70,9 @@ export type Order = {
   couponCode: string;
   couponDiscount: number;
   couponID: string;
-  customerCoordinates : {
-    lat : number ;
-    long : number ;
+  customerCoordinates: {
+    lat: number;
+    long: number;
   }
   deliveryFee: number;
   isDeliveryFeeOff: boolean;
@@ -78,7 +80,7 @@ export type Order = {
   orderAt: Timestamp; // Firestore timestamp or ISO string
   orderId: string;
   paymentId: string;
-  paymentMethod: "COD" | "ONLINE" | string; // Can expand if needed
+  paymentMethod: "COD" | "Online"; // Can expand if needed
   platformFee: number;
   products: {
     imageUrl: string;
@@ -91,11 +93,10 @@ export type Order = {
     variant: string;
   }[];
   status: {
-    ordered: {
+    [key: string]: {
       message: string;
       timestamp: Timestamp; // Firestore timestamp or ISO string
     };
-    // You can add more status stages like "shipped", "delivered" later
   };
   storeCoordinates: {
     lat: number;
@@ -105,4 +106,32 @@ export type Order = {
   storename: string;
   totalAmount: number;
   userId: string;
+};
+
+
+type ProductVariation = {
+  discount: number;
+  mrp: number;
+  price: number;
+  stockQuantity: number;
+};
+
+export type Product = {
+  createdAt: Timestamp; // ISO date string
+  cuisine: string;
+  lowerCuisine: string;
+  imageUrl: string;
+  isAvailable: boolean;
+  lastUpdated: string; // ISO date string
+  name: string;
+  lowerName: string;
+  productCategory: string;
+  productId: string;
+  storeCategory: string;
+  storeId: string;
+  type: 'veg' | 'nonVeg'; // can be a union if only these values exist
+  variations: {
+    [key: string]: ProductVariation; // dynamic keys like "half", "full"
+  };
+  rating: number;
 };

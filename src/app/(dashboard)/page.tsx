@@ -1,7 +1,21 @@
+"use client";
+
+
+import { useEffect } from "react";
+
 function page() {
-  return (
-    <div>page</div>
-  )
+  const datafn = async () => {
+    console.log( 
+
+  );
+    
+  };
+
+  useEffect(() => {
+    datafn();
+  }, []);
+
+  return <div>page</div>;
 }
 
-export default page
+export default page;
