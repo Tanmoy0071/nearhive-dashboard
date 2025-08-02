@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, ChangeEvent } from "react"
+import React, { useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -23,13 +23,13 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
-import Image from "next/image"
+
+import ImageUploadWithPreview from "@/components/ImageUploadWithPreview"
 
 const storeOptions = ["Store A", "Store B", "Store C", "SuperMart", "QuickBite"]
 
 const AddProducts: React.FC = () => {
-  const [image, setImage] = useState<File | null>(null)
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [productImage, setProductImage] = useState<File | null>(null)
   const [productType, setProductType] = useState("")
   const [cuisineType, setCuisineType] = useState("")
   const [foodType, setFoodType] = useState("veg")
@@ -45,14 +45,6 @@ const AddProducts: React.FC = () => {
   const defaultVariations = ["Half", "Full", "Small", "Medium", "Large"]
   const bakeryVariations = ["1 Pound", "1.2 Pound"]
   const variationOptions = productType === "bakery" ? bakeryVariations : defaultVariations
-
-  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setImage(file)
-      setImageUrl(URL.createObjectURL(file))
-    }
-  }
 
   const toggleVariation = (variation: string) => {
     setSelectedVariations((prev) =>
@@ -95,6 +87,7 @@ const AddProducts: React.FC = () => {
 
         <ScrollArea className="max-h-[80vh] pr-2">
           <div className="grid gap-4 py-4">
+
             {/* Store Combobox */}
             <div className="flex flex-col gap-2">
               <Label>Store</Label>
@@ -136,20 +129,13 @@ const AddProducts: React.FC = () => {
               </Popover>
             </div>
 
-            {/* Image Upload */}
-            <div className="flex flex-col gap-2">
-              <Label>Upload Image (max 1)</Label>
-              <Input type="file" accept="image/*" onChange={handleImageUpload} />
-              {imageUrl && (
-                <Image
-                  src={imageUrl}
-                  alt="Preview"
-                  width={100}
-                  height={100}
-                  className="rounded border mt-2"
-                />
-              )}
-            </div>
+            {/* Image Upload with Preview */}
+         <ImageUploadWithPreview
+  label="Upload Product Image"
+  onFileChange={(file) => setProductImage(file)}
+  previewClassName="w-32 h-32"
+/>
+
 
             {/* Product Type */}
             <div className="flex flex-col gap-2">

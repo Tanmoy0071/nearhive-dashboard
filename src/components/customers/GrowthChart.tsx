@@ -23,11 +23,7 @@ import { DateRange } from "react-day-picker"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 import { ScrollArea } from "@/components/ui/scroll-area"
-const Papa: any = require("papaparse")
-import * as XLSX from "xlsx"
-import jsPDF from "jspdf"
-import autoTable from "jspdf-autotable"
-
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectTrigger,
@@ -35,7 +31,12 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
+
+import { useCustomersQuery, useUsersQuery } from "@/hooks/useFiresStoreQueries"
+const Papa: any = require("papaparse")
+import * as XLSX from "xlsx"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 
 type Category = "food" | "grocery" | "both"
 
@@ -45,19 +46,9 @@ type User = {
   phone: string
   address: string
   pincode: string
-  createdAt: string
+  createdAt: string // ISO date string
   category: Category
 }
-
-const users: User[] = Array.from({ length: 20 }, (_, i) => ({
-  id: i + 1,
-  name: `User ${i + 1}`,
-  phone: `98765000${i}`,
-  address: `Address ${i + 1}`,
-  pincode: `7000${i}`,
-  createdAt: `2025-07-${(i % 28) + 1 < 10 ? "0" : ""}${(i % 28) + 1}`,
-  category: ["food", "grocery", "both"][i % 3] as Category,
-}))
 
 const availableMonths = ["2025-07", "2025-08"]
 
@@ -68,46 +59,26 @@ export default function UserTable() {
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [currentPage, setCurrentPage] = useState<number>(1)
 
-  const exportData = (type: "csv" | "excel" | "pdf") => {
-  const exportFields = filteredUsers.map((user) => ({
-    ID: user.id,
-    Name: user.name,
-    "Phone Number": user.phone,
-    "Full Address": user.address,
-    "Pin-code": user.pincode,
-    Date: format(parseISO(user.createdAt), "dd MMM yyyy"),
-    Category: user.category,
-  }))
+  const { data } = useUsersQuery()
 
-  if (type === "csv") {
-    const csv = Papa.unparse(exportFields)
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.setAttribute("download", "users.csv")
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
+  const transformedUsers: User[] = useMemo(() => {
+    if (!data) return []
 
-  if (type === "excel") {
-    const worksheet = XLSX.utils.json_to_sheet(exportFields)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Users")
-    XLSX.writeFile(workbook, "users.xlsx")
-  }
-
-  if (type === "pdf") {
-    const doc = new jsPDF()
-    autoTable(doc, {
-      head: [Object.keys(exportFields[0])],
-      body: exportFields.map((user) => Object.values(user)),
-    })
-    doc.save("users.pdf")
-  }
-}
-
+    return data.map((user: any, index: number): User => ({
+      id: index + 1,
+      name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      phone: user.phoneNumber || "-",
+      address:
+        `${user.address?.addressLine1 || ""} ${user.address?.addressLine2 || ""}`.trim() ||
+        user.location ||
+        "-",
+      pincode: user.address?.pincode || "-",
+      createdAt: user.createdAt?.seconds
+        ? new Date(user.createdAt.seconds * 1000).toISOString()
+        : new Date().toISOString(),
+      category: "both", // You can customize this logic as needed
+    }))
+  }, [data])
 
   const toggleMonth = (month: string) => {
     setSelectedMonths((prev) =>
@@ -119,7 +90,7 @@ export default function UserTable() {
   }
 
   const filteredUsers = useMemo(() => {
-    return users.filter((user) => {
+    return transformedUsers.filter((user) => {
       const userDate = parseISO(user.createdAt)
       const userMonth = format(userDate, "yyyy-MM")
 
@@ -136,11 +107,7 @@ export default function UserTable() {
       const inCategory =
         categoryFilter === "all"
           ? true
-          : categoryFilter === "food"
-          ? user.category === "food"
-          : categoryFilter === "grocery"
-          ? user.category === "grocery"
-          : true
+          : user.category === categoryFilter
 
       const inSearch = [user.name, user.phone, user.address, user.pincode]
         .join(" ")
@@ -149,7 +116,47 @@ export default function UserTable() {
 
       return inDateRange && inMonths && inCategory && inSearch
     })
-  }, [date, selectedMonths, categoryFilter, searchQuery])
+  }, [date, selectedMonths, categoryFilter, searchQuery, transformedUsers])
+
+  const exportData = (type: "csv" | "excel" | "pdf") => {
+    const exportFields = filteredUsers.map((user) => ({
+      ID: user.id,
+      Name: user.name,
+      "Phone Number": user.phone,
+      "Full Address": user.address,
+      "Pin-code": user.pincode,
+      Date: format(parseISO(user.createdAt), "dd MMM yyyy"),
+      Category: user.category,
+    }))
+
+    if (type === "csv") {
+      const csv = Papa.unparse(exportFields)
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.setAttribute("download", "users.csv")
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+
+    if (type === "excel") {
+      const worksheet = XLSX.utils.json_to_sheet(exportFields)
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Users")
+      XLSX.writeFile(workbook, "users.xlsx")
+    }
+
+    if (type === "pdf") {
+      const doc = new jsPDF()
+      autoTable(doc, {
+        head: [Object.keys(exportFields[0])],
+        body: exportFields.map((user) => Object.values(user)),
+      })
+      doc.save("users.pdf")
+    }
+  }
 
   const ITEMS_PER_PAGE = 10
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE)
@@ -165,7 +172,6 @@ export default function UserTable() {
 
   return (
     <div className="p-4 space-y-4">
-    
       <div className="flex justify-between flex-wrap gap-4 items-center">
         <div className="flex gap-4 items-center">
           <h2 className="text-lg font-semibold">
@@ -187,7 +193,6 @@ export default function UserTable() {
         </div>
 
         <div className="flex flex-wrap gap-4 items-center">
-       
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -246,7 +251,6 @@ export default function UserTable() {
             </PopoverContent>
           </Popover>
 
-          
           <Select
             value={categoryFilter}
             onValueChange={(value) => {
@@ -263,40 +267,40 @@ export default function UserTable() {
               <SelectItem value="grocery">Only Grocery</SelectItem>
             </SelectContent>
           </Select>
+
           <Popover>
-  <PopoverTrigger asChild>
-    <Button variant="outline">Export</Button>
-  </PopoverTrigger>
-  <PopoverContent className="w-36">
-    <div className="space-y-2">
-      <Button
-        variant="ghost"
-        className="w-full justify-start"
-        onClick={() => exportData("csv")}
-      >
-        Export as CSV
-      </Button>
-      <Button
-        variant="ghost"
-        className="w-full justify-start"
-        onClick={() => exportData("excel")}
-      >
-        Export as Excel
-      </Button>
-      <Button
-        variant="ghost"
-        className="w-full justify-start"
-        onClick={() => exportData("pdf")}
-      >
-        Export as PDF
-      </Button>
-    </div>
-  </PopoverContent>
-</Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline">Export</Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-36">
+              <div className="space-y-2">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => exportData("csv")}
+                >
+                  Export as CSV
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => exportData("excel")}
+                >
+                  Export as Excel
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => exportData("pdf")}
+                >
+                  Export as PDF
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
-     
       <Table>
         <TableHeader>
           <TableRow>
@@ -333,7 +337,6 @@ export default function UserTable() {
           )}
         </TableBody>
       </Table>
-
 
       <div className="flex justify-between items-center pt-4">
         <span className="text-sm text-muted-foreground">

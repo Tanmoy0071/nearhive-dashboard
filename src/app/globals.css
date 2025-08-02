@@ -122,3 +122,29 @@
     @apply bg-background text-foreground;
   }
 }
+
+.ck.ck-editor__main > .ck-editor__editable {
+  background-color: #1f1f1f;
+  color: #e0e0e0;
+  border-color: #3a3a3a;
+}
+
+.ck.ck-toolbar {
+  background-color: #2c2c2c;
+  border-color: #3a3a3a;
+}
+
+.ck.ck-toolbar .ck-button {
+  color: #e0e0e0;
+}
+
+.ck.ck-toolbar .ck-button.ck-on {
+  background-color: #444;
+}
+.ckeditor-dark .ck.ck-editor__main > .ck-editor__editable {
+  background-color: #1f1f1f;
+  color: #e0e0e0;
+}
+.ckeditor-dark .ck.ck-toolbar {
+  background-color: #2c2c2c;
+}

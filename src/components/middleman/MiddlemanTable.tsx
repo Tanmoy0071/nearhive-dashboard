@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo } from "react"
+import React, { useState, useMemo, useEffect } from "react"
 import {
   Table,
   TableHeader,
@@ -28,19 +28,9 @@ import { Switch } from "@/components/ui/switch"
 import { addDays, format, isWithinInterval, parseISO } from "date-fns"
 import { DateRange } from "react-day-picker"
 
-// Sample sales data
-const sampleSales = [
-  {
-    product: "Chicken Cheese Pizza",
-    price: 179.1,
-    qty: 1,
-    time: "2025-07-10T19:09:00",
-    location: "Mahanta Bhawan, near s...",
-    payment: "Online Payment",
-    orderId: "ORD001",
-  },
-  // Add more sample sales if needed
-]
+
+import { Middlemen } from "@/types/backend/models" 
+import { useMiddlemenQuery } from "@/hooks/useFiresStoreQueries"
 
 type MiddlemanInfo = {
   dob: string
@@ -60,84 +50,103 @@ type Middleman = {
   name: string
   phone: string
   successfulOrders: number
-  ranking:string
-  rating:number
+  ranking: string
+  rating: number
   totalAmount: number
   status: boolean
   totalEarnings: number
   info: MiddlemanInfo
 }
 
+const sampleSales = [
+  {
+    product: "Chicken Cheese Pizza",
+    price: 179.1,
+    qty: 1,
+    time: "2025-07-10T19:09:00",
+    location: "Mahanta Bhawan, near s...",
+    payment: "Online Payment",
+    orderId: "ORD001",
+  },
+]
+
 function MiddlemanTable() {
   const [search, setSearch] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
-  const perPage = 10
   const [manageSheet, setManageSheet] = useState(false)
   const [salesDialog, setSalesDialog] = useState(false)
-  const [selectedMiddleman, setSelectedMiddleman] = useState<Middleman | null>(
-    null
-  )
-const [date, setDate] = useState<DateRange | undefined>({
-  from: new Date(),
-  to: addDays(new Date(), 0),
-})
+  const [selectedMiddleman, setSelectedMiddleman] = useState<Middleman | null>(null)
+
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: addDays(new Date(), 0),
+  })
 
 
-  const [middlemen, setMiddlemen] = useState<Middleman[]>([
-    {
-      id: "MID001",
-      name: "Himesh Das",
-      phone: "9876543210",
-      successfulOrders: 15,
-      totalAmount: 5643,
-      ranking:"#1",
-      rating:4,
-      status: true,
-      totalEarnings: 4300,
+
+  const { data: middlemenData, isLoading, error } = useMiddlemenQuery()
+
+  const middlemen: Middleman[] = useMemo(() => {
+    if (!middlemenData) return []
+
+    console.log("Fetched Middlemen Data:", middlemenData)
+
+    return middlemenData.map((m: Middlemen): Middleman => ({
+      id: m.middlemanId,
+      name: m.fullName,
+      phone: m.phoneNumber,
+      successfulOrders: 0, // Replace with real data if available
+      ranking: "#1", // Static or calculate if needed
+      rating: 4, // Static or calculate
+      totalAmount: 3000, // Placeholder
+      status: m.isAvailable,
+      totalEarnings: m.todayEarning,
       info: {
-        dob: "1990-01-15",
-        photo: "",
-        email: "himesh@example.com",
-        dProof: "DL123456",
-        vehicleReg: "WB12AB1234",
-        vehicleLicense: "LIC123456",
-        bankAcc: "1234567890",
-        emergencyContact: "9123456789",
-        aadhar: "2345-6789-1234",
-        pan: "ABCDE1234F",
+        dob: m.dateOfBirth,
+        photo: "", // Not available
+        email: m.email,
+        dProof: m.idProof,
+        vehicleReg: m.vehicleRegistrationNumber,
+        vehicleLicense: "", // Not available
+        bankAcc: m.upiId,
+        emergencyContact: m.emergencyContact,
+        aadhar: m.idProof.includes("Aadhaar") ? m.idProof : "",
+        pan: m.idProof.includes("PAN") ? m.idProof : "",
       },
-    },
-  ])
+    }))
+  }, [middlemenData])
 
   const filtered = middlemen.filter((m) =>
     m.name.toLowerCase().includes(search.toLowerCase())
   )
-  const totalPages = Math.ceil(filtered.length / perPage)
+
+  const totalPages = Math.ceil(filtered.length / 10)
   const paginated = useMemo(() => {
-    const start = (currentPage - 1) * perPage
-    return filtered.slice(start, start + perPage)
+    const start = (currentPage - 1) * 10
+    return filtered.slice(start, start + 10)
   }, [filtered, currentPage])
 
   const handleToggleStatus = (id: string) => {
-    setMiddlemen((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, status: !m.status } : m))
+    if (!middlemenData) return
+    const updated = middlemen.map((m) =>
+      m.id === id ? { ...m, status: !m.status } : m
     )
-    if (selectedMiddleman?.id === id) {
-      setSelectedMiddleman((prev) =>
-        prev ? { ...prev, status: !prev.status } : prev
-      )
-    }
+    setSelectedMiddleman((prev) =>
+      prev?.id === id ? { ...prev, status: !prev.status } : prev
+    )
   }
 
-const filteredSales = sampleSales.filter((sale) => {
-  if (!date?.from || !date?.to) return true
-  const time = parseISO(sale.time)
-  return isWithinInterval(time, {
-    start: date.from,
-    end: date.to,
+  const filteredSales = sampleSales.filter((sale) => {
+    if (!date?.from || !date?.to) return true
+    const time = parseISO(sale.time)
+    return isWithinInterval(time, {
+      start: date.from,
+      end: date.to,
+    })
   })
-})
 
+  if (isLoading) return <div className="p-4">Loading...</div>
+  if (error) return <div className="p-4 text-red-500">Error fetching data.</div>
 
   return (
     <div className="p-4">
@@ -175,8 +184,8 @@ const filteredSales = sampleSales.filter((sale) => {
                 <TableCell>{m.name}</TableCell>
                 <TableCell>{m.phone}</TableCell>
                 <TableCell>{m.successfulOrders}</TableCell>
-                  <TableCell>{m.ranking}</TableCell>
-                    <TableCell>{m.rating}</TableCell>
+                <TableCell>{m.ranking}</TableCell>
+                <TableCell>{m.rating}</TableCell>
                 <TableCell>₹{m.totalAmount}</TableCell>
                 <TableCell>
                   <span
@@ -211,13 +220,14 @@ const filteredSales = sampleSales.filter((sale) => {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={8} className="text-center">
+              <TableCell colSpan={10} className="text-center">
                 No data found
               </TableCell>
             </TableRow>
           )}
         </TableBody>
       </Table>
+
       <div className="flex justify-end gap-2 pt-4">
         <Button
           variant="outline"
@@ -248,7 +258,9 @@ const filteredSales = sampleSales.filter((sale) => {
                 <span>Status:</span>
                 <Switch
                   checked={selectedMiddleman.status}
-                  onCheckedChange={() => handleToggleStatus(selectedMiddleman.id)}
+                  onCheckedChange={() =>
+                    handleToggleStatus(selectedMiddleman.id)
+                  }
                 />
               </div>
               <div className="text-sm space-y-1">
@@ -256,11 +268,8 @@ const filteredSales = sampleSales.filter((sale) => {
                 <p><strong>Email:</strong> {selectedMiddleman.info.email}</p>
                 <p><strong>D Proof:</strong> {selectedMiddleman.info.dProof}</p>
                 <p><strong>Vehicle Reg No:</strong> {selectedMiddleman.info.vehicleReg}</p>
-                <p><strong>Vehicle License:</strong> {selectedMiddleman.info.vehicleLicense}</p>
-                <p><strong>Bank Account No:</strong> {selectedMiddleman.info.bankAcc}</p>
+                <p><strong>Bank Account:</strong> {selectedMiddleman.info.bankAcc}</p>
                 <p><strong>Emergency Contact:</strong> {selectedMiddleman.info.emergencyContact}</p>
-                <p><strong>Aadhar:</strong> {selectedMiddleman.info.aadhar}</p>
-                <p><strong>PAN:</strong> {selectedMiddleman.info.pan}</p>
               </div>
             </div>
           )}
@@ -273,16 +282,16 @@ const filteredSales = sampleSales.filter((sale) => {
             <DialogTitle>Track Sales for {selectedMiddleman?.name}</DialogTitle>
           </DialogHeader>
           <div className="py-2">
-    <Calendar
-  mode="range"
-  selected={date}
-  onSelect={setDate}
-  className="rounded-md border"
-/>
-
+            <Calendar
+              mode="range"
+              selected={date}
+              onSelect={setDate}
+              className="rounded-md border"
+            />
           </div>
           <div className="py-2 font-semibold">
-            Total Orders: {filteredSales.length} | Total Revenue: ₹{filteredSales.reduce((acc, s) => acc + s.price, 0).toFixed(2)}
+            Total Orders: {filteredSales.length} | Total Revenue: ₹
+            {filteredSales.reduce((acc, s) => acc + s.price, 0).toFixed(2)}
           </div>
           <Table>
             <TableHeader>
@@ -299,9 +308,7 @@ const filteredSales = sampleSales.filter((sale) => {
             <TableBody>
               {filteredSales.map((sale, i) => (
                 <TableRow key={i}>
-                  <TableCell>
-                      {sale.product}
-                  </TableCell>
+                  <TableCell>{sale.product}</TableCell>
                   <TableCell>₹{sale.price}</TableCell>
                   <TableCell>{sale.qty}</TableCell>
                   <TableCell>{format(parseISO(sale.time), "hh:mm a")}</TableCell>

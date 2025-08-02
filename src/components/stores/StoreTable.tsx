@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useMemo } from "react"
 import {
   Table,
   TableHeader,
@@ -26,26 +26,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-
-const dummyData = Array.from({ length: 45 }, (_, i) => ({
-  id: `ST${(i + 1).toString().padStart(3, "0")}`,
-  name: `Store ${i + 1}`,
-  timing: "8 AM - 10 PM",
-  orders: Math.floor(Math.random() * 200),
-  sales: Math.floor(Math.random() * 50000),
-  revenue: Math.floor(Math.random() * 40000),
-  commission: Math.floor(Math.random() * 10000),
-  ranking: `#${Math.floor(Math.random() * 10) + 1}`,
-  prepTime: `${10 + Math.floor(Math.random() * 30)}m`,
-  acceptanceRate: `${80 + Math.floor(Math.random() * 20)}%`,
-  rating: (4 + Math.random()).toFixed(1),
-}))
+import { useStoresQuery } from "@/hooks/useFiresStoreQueries"
+import {Store} from '@/types/backend/models'
 
 const ITEMS_PER_PAGE = 10
 
 function StoreTable() {
   const [search, setSearch] = useState("")
-  const [selectedStore, setSelectedStore] = useState<any>(null)
+  const [selectedStore, setSelectedStore] = useState<Store | null>(null)
   const [showVerificationDialog, setShowVerificationDialog] = useState(false)
   const [showCreateFormDialog, setShowCreateFormDialog] = useState(false)
   const [emailToVerify, setEmailToVerify] = useState("")
@@ -60,9 +48,15 @@ function StoreTable() {
   })
   const [currentPage, setCurrentPage] = useState(1)
 
-  const filtered = dummyData.filter((store) =>
-    store.name.toLowerCase().includes(search.toLowerCase())
-  )
+  const { data: storesData = [], isLoading } = useStoresQuery()
+
+  console.log(storesData)
+
+  const filtered = useMemo(() => {
+    return storesData.filter((store) =>
+      store.name.toLowerCase().includes(search.toLowerCase())
+    )
+  }, [storesData, search])
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE)
   const paginatedData = filtered.slice(
@@ -79,7 +73,7 @@ function StoreTable() {
           value={search}
           onChange={(e) => {
             setSearch(e.target.value)
-            setCurrentPage(1) // reset page on search
+            setCurrentPage(1)
           }}
           className="max-w-sm"
         />
@@ -95,33 +89,39 @@ function StoreTable() {
             <TableRow>
               <TableHead>Store ID</TableHead>
               <TableHead>Store Name</TableHead>
-              <TableHead>Timing</TableHead>
-              <TableHead>Orders</TableHead>
-              <TableHead>Sales (₹)</TableHead>
-              <TableHead>Revenue (₹)</TableHead>
-              <TableHead>Commission (₹)</TableHead>
-              <TableHead>Ranking</TableHead>
-              <TableHead>Avg Prep Time</TableHead>
-              <TableHead>Acceptance Rate</TableHead>
-              <TableHead>Ratings</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Location</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedData.length > 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-6">
+                  Loading...
+                </TableCell>
+              </TableRow>
+            ) : paginatedData.length > 0 ? (
               paginatedData.map((store, idx) => (
                 <TableRow key={idx}>
-                  <TableCell>{store.id}</TableCell>
+                  <TableCell>{store.storeId}</TableCell>
                   <TableCell>{store.name}</TableCell>
-                  <TableCell>{store.timing}</TableCell>
-                  <TableCell>{store.orders}</TableCell>
-                  <TableCell>₹{store.sales}</TableCell>
-                  <TableCell>₹{store.revenue}</TableCell>
-                  <TableCell>₹{store.commission}</TableCell>
-                  <TableCell>{store.ranking}</TableCell>
-                  <TableCell>{store.prepTime}</TableCell>
-                  <TableCell>{store.acceptanceRate}</TableCell>
-                  <TableCell>{store.rating}</TableCell>
+                  <TableCell>{store.category}</TableCell>
+                  <TableCell>{store.phone}</TableCell>
+                  <TableCell>{store.email}</TableCell>
+                  <TableCell>{store.location}</TableCell>
+                  <TableCell>
+                    {store.isBlocked
+                      ? "Blocked"
+                      : store.isPaused
+                      ? "Paused"
+                      : store.isActive
+                      ? "Active"
+                      : "Inactive"}
+                  </TableCell>
                   <TableCell>
                     <Button
                       variant="outline"
@@ -135,7 +135,7 @@ function StoreTable() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={12} className="text-center py-6 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
                   No stores found.
                 </TableCell>
               </TableRow>
@@ -144,7 +144,7 @@ function StoreTable() {
         </Table>
       </div>
 
-      {/* Pagination Controls */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
           <Button variant="outline" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>
@@ -169,15 +169,15 @@ function StoreTable() {
             <div className="mt-6 space-y-6 text-sm px-7">
               <div className="flex items-center justify-between">
                 <span>Store Open</span>
-                <Switch defaultChecked />
+                <Switch defaultChecked={selectedStore.isActive} />
               </div>
               <div className="flex items-center justify-between">
                 <span>Block Store</span>
-                <Switch />
+                <Switch defaultChecked={selectedStore.isBlocked} />
               </div>
               <div className="flex items-center justify-between">
                 <span>Pause Store</span>
-                <Switch />
+                <Switch defaultChecked={selectedStore.isPaused} />
               </div>
             </div>
           </SheetContent>
