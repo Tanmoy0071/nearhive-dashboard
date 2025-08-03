@@ -9,6 +9,7 @@ import {
   query,
   where,
   WhereFilterOp,
+  orderBy,
 } from "firebase/firestore";
 import {
   ref,
@@ -64,15 +65,22 @@ export const FirestoreService = {
   },
 
   // 🔎 Get documents with multiple where clauses
-  getWhere: async (
+   getByConditions : async (
     collectionName: string,
-    conditions: [fieldPath: string, opStr: WhereFilterOp, value: any][] = []
+    conditions: [fieldPath: string, opStr: WhereFilterOp, value: any][] = [],
+    orderByFields: { field: string; direction?: "asc" | "desc" }[] = []
   ): Promise<FirestoreData[]> => {
     const ref = collection(db, collectionName);
-    const q = query(ref, ...conditions.map(c => where(...c)));
+
+    const q = query(
+      ref,
+      ...conditions.map(c => where(...c)),
+      ...orderByFields.map(o => orderBy(o.field, o.direction || "asc"))
+    );
+
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  },
+  } ,
 
   // 📤 Upload a file and get its download URL
   uploadFile: async (file: File, path: string): Promise<string> => {

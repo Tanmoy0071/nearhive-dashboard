@@ -1,36 +1,38 @@
-"use client"
+"use client";
 
-import React, { useState } from "react"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import clsx from "clsx"
+import React, { useState } from "react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import clsx from "clsx";
 
 type Props = {
-  label?: string
-  id?: string
-  previewClassName?: string
-  onFileChange?: (file: File | null) => void
-}
+  label: string;
+  id: string;
+  previewClassName?: string;
+  onFileChange: (file: File | null) => void;
+  previewImage?: string;
+};
 
 const ImageUploadWithPreview: React.FC<Props> = ({
-  label = "Upload Image",
-  id = "image-upload",
+  label,
+  id,
   previewClassName,
   onFileChange,
+  previewImage,
 }) => {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | undefined>(previewImage);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null
+    const file = e.target.files?.[0] || null;
     if (file) {
-      const preview = URL.createObjectURL(file)
-      setPreviewUrl(preview)
+      const preview = URL.createObjectURL(file);
+      setPreviewUrl(preview);
     } else {
-      setPreviewUrl(null)
+      setPreviewUrl(undefined);
     }
 
-    onFileChange?.(file)
-  }
+    onFileChange?.(file);
+  };
 
   return (
     <div className="flex flex-col gap-2">
@@ -47,7 +49,7 @@ const ImageUploadWithPreview: React.FC<Props> = ({
         />
       )}
     </div>
-  )
-}
+  );
+};
 
-export default ImageUploadWithPreview
+export default ImageUploadWithPreview;

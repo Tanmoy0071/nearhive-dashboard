@@ -1,39 +1,79 @@
-"use client"
+"use client";
 
-import React, { useState } from "react"
-import { Button } from "@/components/ui/button"
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   ToggleGroup,
   ToggleGroupItem,
-} from "@/components/ui/toggle-group"
-import { Bold, Italic, Underline } from "lucide-react"
-import ImageUploadWithPreview from "@/components/ImageUploadWithPreview"
+} from "@/components/ui/toggle-group";
+import { Bold, Italic, Underline } from "lucide-react";
+import ImageUploadWithPreview from "@/components/ImageUploadWithPreview";
+import { createBlog } from "@/services/blogs";
 
 const AddBlogs = () => {
-  const [content, setContent] = useState("")
-  const [formatting, setFormatting] = useState<string[]>([])
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [content, setContent] = useState("");
+  const [thumbnail, setThumbnail] = useState<File | null>(null);
+  const [formatting, setFormatting] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const handleFormattingChange = (value: string[]) => {
-    setFormatting(value)
-  }
+    setFormatting(value);
+  };
 
   const applyFormatting = (text: string): string => {
-    let formatted = text
-    if (formatting.includes("bold")) formatted = `**${formatted}**`
-    if (formatting.includes("italic")) formatted = `*${formatted}*`
-    if (formatting.includes("underline")) formatted = `__${formatted}__`
-    return formatted
-  }
+    let formatted = text;
+    if (formatting.includes("bold")) formatted = `**${formatted}**`;
+    if (formatting.includes("italic")) formatted = `*${formatted}*`;
+    if (formatting.includes("underline")) formatted = `__${formatted}__`;
+    return formatted;
+  };
+
+  const handleSubmit = async () => {
+    if (!title.trim() || !description.trim() || !content.trim() || !thumbnail) {
+      alert("All fields are required!");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+
+     const res =  await createBlog({
+        title ,
+        description ,
+        content ,
+        thumbnail
+      })
+
+      console.log(res);
+
+      alert("Blog created")
+
+      setTitle("") ;
+      setDescription("");
+      setContent("");
+      setThumbnail(null)
+      
+
+    } catch (error) {
+      console.error("Error submitting blog:", error);
+      alert("Something went wrong!");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="p-4">
@@ -48,25 +88,37 @@ const AddBlogs = () => {
           </DialogHeader>
 
           {/* Thumbnail upload with preview */}
-         <ImageUploadWithPreview
-  label="Thumbnail"
-  id="thumbnail"
-  previewClassName="w-full h-48"
-/>
+          <ImageUploadWithPreview
+            label="Thumbnail"
+            id="thumbnail"
+            previewClassName="w-full h-48"
+            onFileChange={(file) => setThumbnail(file)}
+          />
+
           {/* Title */}
-          <div className="space-y-2">
+          <div className="space-y-2 mt-4">
             <Label htmlFor="title">Title</Label>
-            <Input id="title" placeholder="Enter blog title" />
+            <Input
+              id="title"
+              placeholder="Enter blog title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
           </div>
 
           {/* Description */}
-          <div className="space-y-2">
+          <div className="space-y-2 mt-4">
             <Label htmlFor="description">Description</Label>
-            <Textarea id="description" placeholder="Enter a short description" />
+            <Textarea
+              id="description"
+              placeholder="Enter a short description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
 
           {/* Content with formatting */}
-          <div className="space-y-2">
+          <div className="space-y-2 mt-4">
             <Label htmlFor="content">Content</Label>
             <ToggleGroup
               type="multiple"
@@ -96,16 +148,16 @@ const AddBlogs = () => {
 
           {/* Submit */}
           <Button
-            onClick={() => {
-              console.log("Formatted Content:", applyFormatting(content))
-            }}
+            className="mt-4 w-full"
+            onClick={handleSubmit}
+            disabled={loading}
           >
-            Submit
+            {loading ? "Submitting..." : "Submit"}
           </Button>
         </DialogContent>
       </Dialog>
     </div>
-  )
-}
+  );
+};
 
-export default AddBlogs
+export default AddBlogs;

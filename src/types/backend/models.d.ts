@@ -51,7 +51,7 @@ export type Middlemen = {
 
 export type User = {
   userId: string;
-  addresses: string[]; // Array of address strings
+  address: string[]; // Array of address strings
   createdAt: Timestamp; // Firestore timestamp or ISO string
   email: string;
   firstName: string;
@@ -64,6 +64,11 @@ export type User = {
   storeId: string | null;
 };
 
+
+type OrderStatusStep = {
+  message: string;
+  timestamp: Timestamp | string;
+};
 
 export type Order = {
   commission: number;
@@ -93,11 +98,12 @@ export type Order = {
     variant: string;
   }[];
   status: {
-    [key: string]: {
-      message: string;
-      timestamp: Timestamp; // Firestore timestamp or ISO string
-    };
-  };
+    accepted?: OrderStatusStep;
+    ordered?: OrderStatusStep;
+    assigned?: OrderStatusStep;
+    prepared?: OrderStatusStep;
+    delivered?: OrderStatusStep;
+  },
   storeCoordinates: {
     lat: number;
     lng: number;
@@ -135,3 +141,12 @@ export type Product = {
   };
   rating: number;
 };
+
+export type Blog = {
+  blogId: string;
+  title: string;
+  thumbnail: string;
+  description: string;
+  content: string;
+  createdAt: Timestamp; // ISO date string
+}

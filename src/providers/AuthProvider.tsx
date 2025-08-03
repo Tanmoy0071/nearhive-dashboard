@@ -27,24 +27,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user?.email) {
-        const adminDoc = await getAdminByEmail(user.email)
-        console.log(adminDoc, "--admin doc--");
+    // const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    //   if (user?.email) {
+    //     const adminDoc = await getAdminByEmail(user.email)
+    //     console.log(adminDoc, "--admin doc--");
 
-        if (adminDoc) {
-          setUser({
-            id: adminDoc.id,
-            email: adminDoc.email,
-            role: "admin",
-          });
-        }
-      }
+    //     if (adminDoc) {
+    //       setUser({
+    //         id: adminDoc.id,
+    //         email: adminDoc.email,
+    //         role: "admin",
+    //       });
+    //     }
+    //   }
 
-      //  console.log(user, "--Auth state--");
-    });
+    //   //  console.log(user, "--Auth state--");
+    // });
 
-    return () => unsubscribe();
+    // return () => unsubscribe();
   }, []);
 
   const googleLogin = async () => {

@@ -1,3 +1,4 @@
+import { fetchBlogs } from "@/services/blogs";
 import { fetchCustomers } from "@/services/customers";
 import { fetchMiddlemen } from "@/services/middlemen";
 import { fetchOrders } from "@/services/orders";
@@ -67,6 +68,18 @@ export function useOrdersQuery() {
     return useQuery({
         queryKey: ["orders"],
         queryFn: fetchOrders ,
+        refetchOnWindowFocus : false ,
+        refetchOnMount : false ,
+        // refetchInterval : 5000
+    });
+}
+
+
+// Hook for blogs
+export function useBlogsQuery() {
+    return useQuery({
+        queryKey: ["blogs"],
+        queryFn: fetchBlogs ,
         refetchOnWindowFocus : false ,
         refetchOnMount : false ,
         // refetchInterval : 5000
