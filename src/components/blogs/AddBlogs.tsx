@@ -1,83 +1,92 @@
-"use client";
+"use client"
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useRef, useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
+import { Bold, Italic, Underline } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@/components/ui/toggle-group";
-import { Bold, Italic, Underline } from "lucide-react";
-import ImageUploadWithPreview from "@/components/ImageUploadWithPreview";
-import { createBlog } from "@/services/blogs";
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import ImageUploadWithPreview from "@/components/ImageUploadWithPreview"
+import { createBlog } from "@/services/blogs"
 
 const AddBlogs = () => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [content, setContent] = useState("");
-  const [thumbnail, setThumbnail] = useState<File | null>(null);
-  const [formatting, setFormatting] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
+  const [content, setContent] = useState("")
+  const [thumbnail, setThumbnail] = useState<File | null>(null)
+  const [formatting, setFormatting] = useState<string[]>([])
+  const [loading, setLoading] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false)
+
+
+  const queryClient = useQueryClient()
+
 
   const handleFormattingChange = (value: string[]) => {
-    setFormatting(value);
-  };
+    setFormatting(value)
+  }
 
   const applyFormatting = (text: string): string => {
-    let formatted = text;
-    if (formatting.includes("bold")) formatted = `**${formatted}**`;
-    if (formatting.includes("italic")) formatted = `*${formatted}*`;
-    if (formatting.includes("underline")) formatted = `__${formatted}__`;
-    return formatted;
-  };
+    let formatted = text
+    if (formatting.includes("bold")) formatted = `**${formatted}**`
+    if (formatting.includes("italic")) formatted = `*${formatted}*`
+    if (formatting.includes("underline")) formatted = `__${formatted}__`
+    return formatted
+  }
 
   const handleSubmit = async () => {
     if (!title.trim() || !description.trim() || !content.trim() || !thumbnail) {
-      alert("All fields are required!");
-      return;
+      alert("All fields are required!")
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
 
     try {
-
-     const res =  await createBlog({
-        title ,
-        description ,
-        content ,
-        thumbnail
+      const res = await createBlog({
+        title,
+        description,
+        content,
+        thumbnail,
       })
 
-      console.log(res);
+      console.log("Created blog:", res)
+      alert("Blog created successfully!")
 
-      alert("Blog created")
 
-      setTitle("") ;
-      setDescription("");
-      setContent("");
+      queryClient.invalidateQueries({ queryKey: ["blogs"] })
+
+  
+      setTitle("")
+      setDescription("")
+      setContent("")
       setThumbnail(null)
-      
+      setFormatting([])
+
+   
+      setDialogOpen(false)
 
     } catch (error) {
-      console.error("Error submitting blog:", error);
-      alert("Something went wrong!");
+      console.error("Error submitting blog:", error)
+      alert("Something went wrong!")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="p-4">
-      <Dialog>
+   <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogTrigger asChild>
           <Button variant="default">Add Blog</Button>
         </DialogTrigger>
@@ -87,7 +96,7 @@ const AddBlogs = () => {
             <DialogTitle>Add New Blog</DialogTitle>
           </DialogHeader>
 
-          {/* Thumbnail upload with preview */}
+          {/* Thumbnail */}
           <ImageUploadWithPreview
             label="Thumbnail"
             id="thumbnail"
@@ -147,17 +156,21 @@ const AddBlogs = () => {
           </div>
 
           {/* Submit */}
-          <Button
-            className="mt-4 w-full"
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            {loading ? "Submitting..." : "Submit"}
-          </Button>
+          <div className="mt-4 flex justify-end gap-2">
+            <Button
+              variant="default"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full"
+            >
+              {loading ? "Submitting..." : "Submit"}
+            </Button>
+   
+          </div>
         </DialogContent>
       </Dialog>
     </div>
-  );
-};
+  )
+}
 
-export default AddBlogs;
+export default AddBlogs

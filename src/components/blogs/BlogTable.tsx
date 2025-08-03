@@ -1,11 +1,20 @@
 "use client"
 
+import { useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/ui/data-table"
 import { useBlogsQuery } from "@/hooks/useFiresStoreQueries"
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
 
 type Blog = {
   id: string
@@ -17,9 +26,10 @@ type Blog = {
 
 const BlogTable = () => {
   const { data, isLoading, isError } = useBlogsQuery()
+  const [dialogOpenId, setDialogOpenId] = useState<string | null>(null)
 
   const blogs: Blog[] = (data || []).map((blog: any) => ({
-    id: blog.id || blog.blogId, 
+    id: blog.id || blog.blogId,
     createdAt: new Date(blog.createdAt.seconds * 1000),
     thumbnail: blog.thumbnail,
     title: blog.title,
@@ -30,18 +40,17 @@ const BlogTable = () => {
     console.log("Edit blog", blog)
   }
 
-  const handleDelete = (id: string) => {
-    console.log("Delete blog with id:", id)
+  const handleDeleteConfirmed = (id: string) => {
+    console.log("Confirmed delete blog with id:", id)
+    setDialogOpenId(null)
+    // Add deletion logic here (e.g. Firestore deleteBlog call)
   }
 
   const columns: ColumnDef<Blog>[] = [
     {
       accessorKey: "createdAt",
       header: "Date",
-      cell: ({ row }) => {
-        const date = row.original.createdAt
-        return format(date, "dd MMM yyyy")
-      },
+      cell: ({ row }) => format(row.original.createdAt, "dd MMM yyyy"),
     },
     {
       accessorKey: "thumbnail",
@@ -78,13 +87,35 @@ const BlogTable = () => {
             <Button size="sm" variant="outline" onClick={() => handleEdit(blog)}>
               Edit
             </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => handleDelete(blog.id)}
-            >
-              Delete
-            </Button>
+
+            <Dialog open={dialogOpenId === blog.id} onOpenChange={(open) => setDialogOpenId(open ? blog.id : null)}>
+              <DialogTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => setDialogOpenId(blog.id)}
+                >
+                  Delete
+                </Button>
+              </DialogTrigger>
+
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Confirm Deletion</DialogTitle>
+                </DialogHeader>
+                <p className="text-sm text-muted-foreground">
+                  Are you sure you want to delete this blog? This action cannot be undone.
+                </p>
+                <DialogFooter className="mt-4">
+                  <Button variant="ghost" onClick={() => setDialogOpenId(null)}>
+                    Cancel
+                  </Button>
+                  <Button variant="destructive" onClick={() => handleDeleteConfirmed(blog.id)}>
+                    Yes, Delete
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         )
       },
