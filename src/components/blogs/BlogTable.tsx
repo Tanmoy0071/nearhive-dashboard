@@ -1,46 +1,38 @@
 "use client"
 
-import { useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/ui/data-table"
+import { useBlogsQuery } from "@/hooks/useFiresStoreQueries"
 
 type Blog = {
   id: string
-  createdAt: string | Date
+  createdAt: Date
   thumbnail: string
   title: string
   description: string
 }
 
 const BlogTable = () => {
-  const [blogs, setBlogs] = useState<Blog[]>([
-    {
-      id: "1",
-      createdAt: new Date(),
-      thumbnail: "/sample.jpg",
-      title: "Join as a creator and earn!",
-      description:
-        "Join as a NearHive creator and earn credits, offers, goodies and many more by contributing to NearHive community. Join as a NearHive creator and earn credits, offers, goodies and many more by contributing to NearHive community.",
-    },
-    {
-      id: "2",
-      createdAt: new Date(),
-      thumbnail: "/sample.jpg",
-      title: "Join as a creator and earn!",
-      description:
-        "Join as a NearHive creator and earn credits, offers, goodies and many more by contributing to NearHive community. Join as a NearHive creator and earn credits, offers, goodies and many more by contributing to NearHive community.",
-    },
-  ])
+  const { data, isLoading, isError } = useBlogsQuery()
+
+  const blogs: Blog[] = (data || []).map((blog: any) => ({
+    id: blog.id || blog.blogId, // In case both exist
+    createdAt: new Date(blog.createdAt.seconds * 1000),
+    thumbnail: blog.thumbnail,
+    title: blog.title,
+    description: blog.description,
+  }))
 
   const handleEdit = (blog: Blog) => {
     console.log("Edit blog", blog)
   }
 
   const handleDelete = (id: string) => {
-    setBlogs((prev) => prev.filter((blog) => blog.id !== id))
+    console.log("Delete blog with id:", id)
+    // Ideally: mutation to delete from Firestore
   }
 
   const columns: ColumnDef<Blog>[] = [
@@ -48,7 +40,7 @@ const BlogTable = () => {
       accessorKey: "createdAt",
       header: "Date",
       cell: ({ row }) => {
-        const date = new Date(row.original.createdAt)
+        const date = row.original.createdAt
         return format(date, "dd MMM yyyy")
       },
     },
@@ -99,6 +91,9 @@ const BlogTable = () => {
       },
     },
   ]
+
+  if (isLoading) return <div className="p-4">Loading...</div>
+  if (isError) return <div className="p-4 text-red-500">Failed to load blogs.</div>
 
   return (
     <div className="p-4">

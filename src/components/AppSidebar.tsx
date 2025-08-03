@@ -245,6 +245,14 @@ const AppSidebar = () => {
             <CollapsibleContent>
               <SidebarGroupContent>
                 <SidebarMenu>
+                   <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <Link href="/blogs">
+                    <Maximize />
+                        Blogs
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
                       <Link href="/#">
