@@ -19,7 +19,7 @@ const BlogTable = () => {
   const { data, isLoading, isError } = useBlogsQuery()
 
   const blogs: Blog[] = (data || []).map((blog: any) => ({
-    id: blog.id || blog.blogId, // In case both exist
+    id: blog.id || blog.blogId, 
     createdAt: new Date(blog.createdAt.seconds * 1000),
     thumbnail: blog.thumbnail,
     title: blog.title,
@@ -32,7 +32,6 @@ const BlogTable = () => {
 
   const handleDelete = (id: string) => {
     console.log("Delete blog with id:", id)
-    // Ideally: mutation to delete from Firestore
   }
 
   const columns: ColumnDef<Blog>[] = [
