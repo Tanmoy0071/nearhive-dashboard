@@ -27,6 +27,13 @@ export type Store = {
   };
 }
 
+export type Campaign = {
+  id: string
+  name: string
+  date: string
+}
+
+
 export type Middlemen = {
   address: string;
   age: number;

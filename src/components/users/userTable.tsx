@@ -52,7 +52,7 @@ type User = {
 
 const availableMonths = ["2025-07", "2025-08"]
 
-export default function CustomerTable() {
+export default function UserTable() {
   const [date, setDate] = useState<DateRange | undefined>()
   const [selectedMonths, setSelectedMonths] = useState<string[]>([])
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
@@ -126,7 +126,7 @@ export default function CustomerTable() {
       "Full Address": user.address,
       "Pin-code": user.pincode,
       Date: format(parseISO(user.createdAt), "dd MMM yyyy"),
-      Category: user.category,
+     
     }))
 
     if (type === "csv") {
@@ -175,7 +175,7 @@ export default function CustomerTable() {
       <div className="flex justify-between flex-wrap gap-4 items-center">
         <div className="flex gap-4 items-center">
           <h2 className="text-lg font-semibold">
-            Customer Count: {filteredUsers.length}
+            Users Count: {filteredUsers.length}
           </h2>
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -251,22 +251,7 @@ export default function CustomerTable() {
             </PopoverContent>
           </Popover>
 
-          <Select
-            value={categoryFilter}
-            onValueChange={(value) => {
-              setCategoryFilter(value)
-              setCurrentPage(1)
-            }}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="food">Only Food</SelectItem>
-              <SelectItem value="grocery">Only Grocery</SelectItem>
-            </SelectContent>
-          </Select>
+         
 
           <Popover>
             <PopoverTrigger asChild>
@@ -310,7 +295,7 @@ export default function CustomerTable() {
             <TableHead>Full Address</TableHead>
             <TableHead>Pin-code</TableHead>
             <TableHead>Date</TableHead>
-            <TableHead>Category</TableHead>
+       
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -331,7 +316,7 @@ export default function CustomerTable() {
                 <TableCell>
                   {format(parseISO(user.createdAt), "dd MMM yyyy")}
                 </TableCell>
-                <TableCell className="capitalize">{user.category}</TableCell>
+               
               </TableRow>
             ))
           )}
