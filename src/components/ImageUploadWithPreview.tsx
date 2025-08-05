@@ -10,7 +10,7 @@ type Props = {
   id: string;
   previewClassName?: string;
   onFileChange: (file: File | null) => void;
-  previewImage?: string;
+  previewImage?: string | null ;
 };
 
 const ImageUploadWithPreview: React.FC<Props> = ({
@@ -18,9 +18,9 @@ const ImageUploadWithPreview: React.FC<Props> = ({
   id,
   previewClassName,
   onFileChange,
-  previewImage,
+  previewImage = null,
 }) => {
-  const [previewUrl, setPreviewUrl] = useState<string | undefined>(previewImage);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(previewImage);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -28,7 +28,7 @@ const ImageUploadWithPreview: React.FC<Props> = ({
       const preview = URL.createObjectURL(file);
       setPreviewUrl(preview);
     } else {
-      setPreviewUrl(undefined);
+      setPreviewUrl(null);
     }
 
     onFileChange?.(file);

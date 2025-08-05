@@ -6,7 +6,6 @@ import { format } from "date-fns"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/ui/data-table"
-import { useBlogsQuery } from "@/hooks/useFiresStoreQueries"
 import {
   Dialog,
   DialogTrigger,
@@ -15,6 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { useBlogsQuery } from "@/hooks/query/useBlogs"
 
 type Blog = {
   id: string
@@ -26,6 +26,7 @@ type Blog = {
 
 const BlogTable = () => {
   const { data, isLoading, isError } = useBlogsQuery()
+
   const [dialogOpenId, setDialogOpenId] = useState<string | null>(null)
 
   const blogs: Blog[] = (data || []).map((blog: any) => ({

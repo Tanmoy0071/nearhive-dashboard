@@ -4,6 +4,7 @@ import { Timestamp } from "firebase/firestore";
 
 // Fetch all blogs 
 export async function fetchBlogs() {
+  
   const blogs = await FirestoreService.getAllDocs("Blogs") as Blog[];
 
   return blogs;
@@ -36,18 +37,21 @@ export async function createBlog({
 
     await FirestoreService.setDoc("Blogs", docId, blog);
 
-    return {
-      success: true,
-      message: " Blog created successfully!",
-      data: blog,
-    };
+    return blog
   } catch (error) {
     console.error("Error creating blog:", error);
-    return {
-      success: false,
-      message: " Failed to create blog. Please try again later.",
-      error: (error as Error).message,
-    };
-  } 
+    throw new Error("Error in creating blog")
 
+  }
+
+}
+
+// delete blog
+export async function deleteBlog(id: string) {
+  try {
+    await FirestoreService.deleteDoc("Blogs", id);
+    return id
+  } catch (error) {
+    throw new Error("Error deleting blog id")
+  }
 }

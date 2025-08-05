@@ -1,92 +1,85 @@
-"use client"
+"use client";
 
-import React, { useRef, useState } from "react"
-import { useQueryClient } from "@tanstack/react-query"
-import { Bold, Italic, Underline } from "lucide-react"
+import React, { useRef, useState } from "react";
+import { Bold, Italic, Underline } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import ImageUploadWithPreview from "@/components/ImageUploadWithPreview"
-import { createBlog } from "@/services/blogs"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import ImageUploadWithPreview from "@/components/ImageUploadWithPreview";
+import { createBlog } from "@/services/blogs";
+import { useBlogsQuery } from "@/hooks/query/useBlogs";
 
 const AddBlogs = () => {
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [content, setContent] = useState("")
-  const [thumbnail, setThumbnail] = useState<File | null>(null)
-  const [formatting, setFormatting] = useState<string[]>([])
-  const [loading, setLoading] = useState(false)
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [content, setContent] = useState("");
+  const [thumbnail, setThumbnail] = useState<File | null>(null);
+  const [formatting, setFormatting] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-
-  const queryClient = useQueryClient()
-
+  const { createMutation } = useBlogsQuery();
 
   const handleFormattingChange = (value: string[]) => {
-    setFormatting(value)
-  }
+    setFormatting(value);
+  };
 
   const applyFormatting = (text: string): string => {
-    let formatted = text
-    if (formatting.includes("bold")) formatted = `**${formatted}**`
-    if (formatting.includes("italic")) formatted = `*${formatted}*`
-    if (formatting.includes("underline")) formatted = `__${formatted}__`
-    return formatted
-  }
+    let formatted = text;
+    if (formatting.includes("bold")) formatted = `**${formatted}**`;
+    if (formatting.includes("italic")) formatted = `*${formatted}*`;
+    if (formatting.includes("underline")) formatted = `__${formatted}__`;
+    return formatted;
+  };
 
   const handleSubmit = async () => {
     if (!title.trim() || !description.trim() || !content.trim() || !thumbnail) {
-      alert("All fields are required!")
-      return
+      alert("All fields are required!");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const res = await createBlog({
+
+      await createMutation.mutateAsync({
         title,
         description,
         content,
         thumbnail,
-      })
-
-      console.log("Created blog:", res)
-      alert("Blog created successfully!")
+      });
 
 
-      queryClient.invalidateQueries({ queryKey: ["blogs"] })
+      alert("Blog created successfully!");
 
-  
-      setTitle("")
-      setDescription("")
-      setContent("")
-      setThumbnail(null)
-      setFormatting([])
+      setTitle("");
+      setDescription("");
+      setContent("");
+      setThumbnail(null);
+      setFormatting([]);
 
-   
-      setDialogOpen(false)
-
+      setDialogOpen(false);
     } catch (error) {
-      console.error("Error submitting blog:", error)
-      alert("Something went wrong!")
+      console.error("Error submitting blog:", error);
+      alert("Something went wrong!");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="p-4">
-   <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogTrigger asChild>
           <Button variant="default">Add Blog</Button>
         </DialogTrigger>
@@ -165,12 +158,11 @@ const AddBlogs = () => {
             >
               {loading ? "Submitting..." : "Submit"}
             </Button>
-   
           </div>
         </DialogContent>
       </Dialog>
     </div>
-  )
-}
+  );
+};
 
-export default AddBlogs
+export default AddBlogs;

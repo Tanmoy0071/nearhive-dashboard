@@ -75,16 +75,5 @@ export function useOrdersQuery() {
 }
 
 
-// Hook for blogs
-export function useBlogsQuery() {
-    return useQuery({
-        queryKey: ["blogs"],
-        queryFn: fetchBlogs ,
-        refetchOnWindowFocus : false ,
-        refetchOnMount : false ,
-        // refetchInterval : 5000
-    });
-}
-
 
 
