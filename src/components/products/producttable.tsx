@@ -1,10 +1,12 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect,useMemo } from "react"
+
 import Image from "next/image"
 import { ColumnDef } from "@tanstack/react-table"
 import type { SortingState } from "@tanstack/react-table"
-
+import { useDebounce } from "@/hooks/useDebounce"
+import { Input } from "@/components/ui/input"
 
 import {
   Select,
@@ -38,6 +40,14 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table"
+
+import dynamic from "next/dynamic"
+
+const AddCampaignDialog = dynamic(() => import("./AddCampaignDialog"), {
+  ssr: false,
+  loading: () => <p className="text-sm text-muted-foreground">Loading...</p>,
+})
+
 
 type Product = {
   id: string
@@ -93,10 +103,22 @@ const products: Product[] = [
 export default function ProductTable() {
   const [previewImage, setPreviewImage] = useState<string | null>(null)
 const [sorting, setSorting] = useState<SortingState>([])
+ const [searchInput, setSearchInput] = useState("")
+  const debouncedSearch = useDebounce(searchInput, 500)
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) =>
+      product.name.toLowerCase().includes(debouncedSearch.toLowerCase())
+    )
+  }, [debouncedSearch])
+
+
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10,
   })
+
+
   const [selectedVariants, setSelectedVariants] = useState<Record<string, "Half" | "Full">>(
   Object.fromEntries(products.map((p) => [p.id, "Half"]))
 )
@@ -134,6 +156,12 @@ const [sorting, setSorting] = useState<SortingState>([])
         </Dialog>
       ),
     },
+    {
+  accessorKey: "name",
+  header: "Name",
+  cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+},
+
    {
   accessorKey: "variants",
   header: "Variant",
@@ -208,24 +236,51 @@ const [sorting, setSorting] = useState<SortingState>([])
     },
     { accessorKey: "cuisine", header: "Cuisine" },
     { accessorKey: "type", header: "Type" },
-    {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => (
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            Edit
-          </Button>
-          <Button variant="destructive" size="sm">
-            Delete
-          </Button>
-        </div>
-      ),
-    },
+{
+  id: "actions",
+  header: "Actions",
+  cell: ({ row }) => {
+    const [openDialog, setOpenDialog] = useState(false)
+
+    return (
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm">
+          Edit
+        </Button>
+        <Button variant="destructive" size="sm">
+          Delete
+        </Button>
+        <Button variant="secondary" size="sm" onClick={() => setOpenDialog(true)}>
+          Add Campaign
+        </Button>
+
+        <AddCampaignDialog
+          open={openDialog}
+          onClose={() => setOpenDialog(false)}
+          campaigns={[
+            {
+              id: "1",
+              name: "Independence Sale",
+              date: "2025-08-15",
+              headings: ["Freedom Combo", "Discount Bonanza"],
+            },
+            {
+              id: "2",
+              name: "Festive Dhamaka",
+              date: "2025-10-20",
+              headings: ["Diwali Delight", "Lights On Combo"],
+            },
+          ]}
+        />
+      </div>
+    )
+  },
+}
+
   ]
 
   const table = useReactTable({
-    data: products,
+    data: filteredProducts, // use filtered data
     columns,
     state: { sorting, pagination },
     onSortingChange: setSorting,
@@ -236,9 +291,23 @@ const [sorting, setSorting] = useState<SortingState>([])
     manualPagination: false,
   })
 
+
   return (
     <div className="space-y-4">
+    <div className="flex justify-between items-center mb-4">
+<div className="flex justify-between items-center px-2">
+  <Input
+    placeholder="Search product name..."
+    value={searchInput}
+    onChange={(e) => setSearchInput(e.target.value)}
+    className="w-64"
+  />
+</div>
+
+</div>
+
       <div className="rounded-md border">
+        
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
