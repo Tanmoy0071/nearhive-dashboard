@@ -1,4 +1,5 @@
 import { fetchBlogs } from "@/services/blogs";
+import { fetchCampaigns } from "@/services/campaings";
 import { fetchCustomers } from "@/services/customers";
 import { fetchMiddlemen } from "@/services/middlemen";
 import { fetchOrders } from "@/services/orders";
@@ -73,6 +74,19 @@ export function useOrdersQuery() {
         refetchInterval : 5000
     });
 }
+
+
+// Hook for campaigns
+export function useCampaignsQuery() {
+    return useQuery({
+        queryKey: ["campaigns"],
+        queryFn: fetchCampaigns ,
+        refetchOnWindowFocus : false ,
+        refetchOnMount : false ,
+        // refetchInterval : 5000
+    });
+}
+
 
 
 
