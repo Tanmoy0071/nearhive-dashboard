@@ -13,7 +13,7 @@ function Products() {
   return (
     <>
     <div className='font-main'>
-      <h1 className="font-bold lg:text-4xl sm:text-sm mb-2">Products (Food)</h1>
+      <h1 className="font-bold lg:text-4xl sm:text-sm mb-5">Products (Food)</h1>
       <AddProducts/>
       <div className='mt-5'>
         <ProductTable />

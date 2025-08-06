@@ -80,6 +80,16 @@ const items = [
     url: "/campaigns",
     icon: Flag,
   },
+  {
+    title: "Cuisine",
+    url: "/cuisine",
+    icon: Pizza,
+  },
+  {
+    title: "Hive Creators",
+    url: "/hivecreators",
+    icon: Projector,
+  },
 ];
 
 const AppSidebar = () => {

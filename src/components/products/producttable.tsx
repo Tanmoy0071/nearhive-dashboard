@@ -1,143 +1,83 @@
 "use client"
 
-import React, { useState, useEffect,useMemo } from "react"
-
+import React, { useState, useMemo,useEffect } from "react"
 import Image from "next/image"
-import { ColumnDef } from "@tanstack/react-table"
-import type { SortingState } from "@tanstack/react-table"
+import dynamic from "next/dynamic"
 import { useDebounce } from "@/hooks/useDebounce"
+import { useProductsQuery } from "@/hooks/useFiresStoreQueries"
 import { Input } from "@/components/ui/input"
-
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead,
+  TableHeader, TableRow,
 } from "@/components/ui/table"
+import {
+  Select, SelectContent, SelectItem,
+  SelectTrigger, SelectValue,
+} from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogTrigger, DialogContent,
+  DialogHeader, DialogTitle,
 } from "@/components/ui/dialog"
 import {
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  getPaginationRowModel,
-  useReactTable,
+  flexRender, getCoreRowModel, getSortedRowModel,
+  getPaginationRowModel, useReactTable,
+  ColumnDef, SortingState,
 } from "@tanstack/react-table"
-
-import dynamic from "next/dynamic"
+import type { Product } from "@/types/backend/models"
+import { Timestamp } from "firebase/firestore"
 
 const AddCampaignDialog = dynamic(() => import("./AddCampaignDialog"), {
   ssr: false,
   loading: () => <p className="text-sm text-muted-foreground">Loading...</p>,
 })
 
-
-type Product = {
-  id: string
-  name: string
-  image: string
-  variants: ("Half" | "Full")[]
-  prices: {
-    Half: { price: number; mrp: number }
-    Full: { price: number; mrp: number }
-  }
-  available: boolean
-  createdAt: string
-  updatedAt: string
-  cuisine: string
-  type:string
-}
-
-
-const products: Product[] = [
-  {
-    id: "1",
-    name: "Paneer Butter Masala",
-    image: "/Butter_Paneer_LEAD_1-2-2.jpg",
-    variants: ["Half", "Full"],
-    prices: {
-      Half: { price: 120, mrp: 150 },
-      Full: { price: 200, mrp: 240 },
-    },
-    available: true,
-    createdAt: "2025-07-20T10:00:00Z",
-    updatedAt: "2025-07-22T09:00:00Z",
-    cuisine: "North Indian",
-    type:"Non-veg"
-  },
-  {
-    id: "2",
-    name: "Paneer Butter Masala",
-    image: "/Butter_Paneer_LEAD_1-2-2.jpg",
-    variants: ["Half", "Full"],
-    prices: {
-      Half: { price: 120, mrp: 150 },
-      Full: { price: 200, mrp: 240 },
-    },
-    available: true,
-    createdAt: "2025-07-20T10:00:00Z",
-    updatedAt: "2025-07-22T09:00:00Z",
-    cuisine: "North Indian",
-    type:"Non-veg"
-  },
-]
-
-
 export default function ProductTable() {
-  const [previewImage, setPreviewImage] = useState<string | null>(null)
-const [sorting, setSorting] = useState<SortingState>([])
- const [searchInput, setSearchInput] = useState("")
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [searchInput, setSearchInput] = useState("")
   const debouncedSearch = useDebounce(searchInput, 500)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
+
+  const { data: products = [] } = useProductsQuery()
+  console.log(products)
+
+const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({})
+
+useEffect(() => {
+  if (products.length) {
+    setSelectedVariants((prev) => {
+      const updated: Record<string, string> = {}
+      for (const p of products) {
+        updated[p.productId] = Object.keys(p.variations)[0] ?? "default"
+      }
+      return updated
+    })
+  }
+}, [products])
+
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) =>
       product.name.toLowerCase().includes(debouncedSearch.toLowerCase())
     )
-  }, [debouncedSearch])
+  }, [products, debouncedSearch])
 
-
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 10,
-  })
-
-
-  const [selectedVariants, setSelectedVariants] = useState<Record<string, "Half" | "Full">>(
-  Object.fromEntries(products.map((p) => [p.id, "Half"]))
-)
-
-
-  const columns: ColumnDef<Product>[] = [
+  const columns: ColumnDef<Product, unknown>[] = [
     {
-      accessorKey: "image",
+      accessorKey: "imageUrl",
       header: "Photo",
       cell: ({ row }) => (
         <Dialog>
           <DialogTrigger asChild>
             <Image
-              src={row.original.image}
+              src={row.original.imageUrl}
               alt={row.original.name}
               width={40}
               height={40}
               className="rounded-full object-cover cursor-pointer"
-              onClick={() => setPreviewImage(row.original.image)}
+              onClick={() => setPreviewImage(row.original.imageUrl)}
             />
           </DialogTrigger>
           <DialogContent className="max-w-sm">
@@ -157,17 +97,16 @@ const [sorting, setSorting] = useState<SortingState>([])
       ),
     },
     {
-  accessorKey: "name",
-  header: "Name",
-  cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
-},
-
+      accessorKey: "name",
+      header: "Name",
+      cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+    },
    {
-  accessorKey: "variants",
   header: "Variant",
   cell: ({ row }) => {
-    const id = row.original.id
-    const current = selectedVariants[id]
+    const id = row.original.productId
+    const variants = Object.keys(row.original.variations)
+    const current = selectedVariants[id] || variants[0]
 
     return (
       <Select
@@ -175,7 +114,7 @@ const [sorting, setSorting] = useState<SortingState>([])
         onValueChange={(value) =>
           setSelectedVariants((prev) => ({
             ...prev,
-            [id]: value as "Half" | "Full",
+            [id]: value,
           }))
         }
       >
@@ -183,7 +122,7 @@ const [sorting, setSorting] = useState<SortingState>([])
           <SelectValue placeholder="Select" />
         </SelectTrigger>
         <SelectContent>
-          {row.original.variants.map((v) => (
+          {variants.map((v) => (
             <SelectItem key={v} value={v}>
               {v}
             </SelectItem>
@@ -194,29 +133,37 @@ const [sorting, setSorting] = useState<SortingState>([])
   },
 },
 {
-  accessorKey: "price",
   header: "Price",
   cell: ({ row }) => {
-    const id = row.original.id
-    const variant = selectedVariants[id]
-    return `₹${row.original.prices[variant].price}`
+    const id = row.original.productId
+    const variant = selectedVariants[id] || Object.keys(row.original.variations)[0]
+    const price = row.original.variations[variant]?.price
+    return price ? `₹${price}` : "-"
   },
 },
 {
-  accessorKey: "mrp",
   header: "MRP",
   cell: ({ row }) => {
-    const id = row.original.id
-    const variant = selectedVariants[id]
-    return `₹${row.original.prices[variant].mrp}`
+    const id = row.original.productId
+    const variant = selectedVariants[id] || Object.keys(row.original.variations)[0]
+    const mrp = row.original.variations[variant]?.mrp
+    return mrp ? `₹${mrp}` : "-"
   },
 },
-
+{
+  header: "Discount",
+  cell: ({ row }) => {
+    const id = row.original.productId
+    const variant = selectedVariants[id] || Object.keys(row.original.variations)[0]
+    const discount = row.original.variations[variant]?.discount
+    return discount ? `${discount}%` : "-"
+  },
+},
     {
-      accessorKey: "available",
+      accessorKey: "isAvailable",
       header: "Availability",
       cell: ({ row }) =>
-        row.original.available ? (
+        row.original.isAvailable ? (
           <Badge variant="default">Available</Badge>
         ) : (
           <Badge variant="destructive">Unavailable</Badge>
@@ -226,61 +173,61 @@ const [sorting, setSorting] = useState<SortingState>([])
       accessorKey: "createdAt",
       header: "Created",
       cell: ({ row }) =>
-        new Date(row.original.createdAt).toLocaleDateString(),
+        row.original.createdAt instanceof Timestamp
+          ? row.original.createdAt.toDate().toLocaleDateString()
+          : "-",
+    },
+  {
+  accessorKey: "lastUpdated",
+  header: "Updated",
+  cell: ({ row }) => {
+    const date = row.original.lastUpdated
+    return date instanceof Timestamp ? date.toDate().toLocaleDateString() : "-"
+  },
+},
+    {
+      accessorKey: "cuisine",
+      header: "Cuisine",
     },
     {
-      accessorKey: "updatedAt",
-      header: "Updated",
-      cell: ({ row }) =>
-        new Date(row.original.updatedAt).toLocaleDateString(),
+      accessorKey: "type",
+      header: "Type",
+      cell: ({ row }) => row.original.type === "veg" ? "Veg" : "Non-Veg",
     },
-    { accessorKey: "cuisine", header: "Cuisine" },
-    { accessorKey: "type", header: "Type" },
-{
-  id: "actions",
-  header: "Actions",
-  cell: ({ row }) => {
-    const [openDialog, setOpenDialog] = useState(false)
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => {
+        const [openDialog, setOpenDialog] = useState(false)
 
-    return (
-      <div className="flex gap-2">
-        <Button variant="outline" size="sm">
-          Edit
-        </Button>
-        <Button variant="destructive" size="sm">
-          Delete
-        </Button>
-        <Button variant="secondary" size="sm" onClick={() => setOpenDialog(true)}>
-          Add Campaign
-        </Button>
+        return (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm">Edit</Button>
+            <Button variant="destructive" size="sm">Delete</Button>
+            <Button variant="secondary" size="sm" onClick={() => setOpenDialog(true)}>
+              Add Campaign
+            </Button>
 
-        <AddCampaignDialog
-          open={openDialog}
-          onClose={() => setOpenDialog(false)}
-          campaigns={[
-            {
-              id: "1",
-              name: "Independence Sale",
-              date: "2025-08-15",
-              headings: ["Freedom Combo", "Discount Bonanza"],
-            },
-            {
-              id: "2",
-              name: "Festive Dhamaka",
-              date: "2025-10-20",
-              headings: ["Diwali Delight", "Lights On Combo"],
-            },
-          ]}
-        />
-      </div>
-    )
-  },
-}
-
+            <AddCampaignDialog
+              open={openDialog}
+              onClose={() => setOpenDialog(false)}
+              campaigns={[
+                {
+                  id: "1",
+                  name: "Independence Sale",
+                  date: "2025-08-15",
+                  headings: ["Freedom Combo", "Discount Bonanza"],
+                },
+              ]}
+            />
+          </div>
+        )
+      },
+    },
   ]
 
   const table = useReactTable({
-    data: filteredProducts, // use filtered data
+    data: filteredProducts,
     columns,
     state: { sorting, pagination },
     onSortingChange: setSorting,
@@ -288,26 +235,20 @@ const [sorting, setSorting] = useState<SortingState>([])
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    manualPagination: false,
   })
-
 
   return (
     <div className="space-y-4">
-    <div className="flex justify-between items-center mb-4">
-<div className="flex justify-between items-center px-2">
-  <Input
-    placeholder="Search product name..."
-    value={searchInput}
-    onChange={(e) => setSearchInput(e.target.value)}
-    className="w-64"
-  />
-</div>
-
-</div>
+      <div className="flex justify-between items-center mb-4">
+        <Input
+          placeholder="Search product name..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="w-64"
+        />
+      </div>
 
       <div className="rounded-md border">
-        
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -351,7 +292,6 @@ const [sorting, setSorting] = useState<SortingState>([])
         </Table>
       </div>
 
-      {/* ✅ Pagination Controls */}
       <div className="flex items-center justify-between px-2">
         <Button
           variant="outline"
@@ -362,8 +302,7 @@ const [sorting, setSorting] = useState<SortingState>([])
           Previous
         </Button>
         <span className="text-sm text-muted-foreground">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
+          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
         </span>
         <Button
           variant="outline"

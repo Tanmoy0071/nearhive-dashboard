@@ -56,17 +56,17 @@ export function LoginForm({
               </Button>
             </div>
 
-            <div className="grid gap-6">
+            {/* <div className="grid gap-6">
               <Button type="submit" className="w-full">
                 Login
               </Button>
-            </div>
-            <div className="text-center text-sm">
+            </div> */}
+            {/* <div className="text-center text-sm">
               Don&apos;t have an account?{" "}
               <a href="#" className="underline underline-offset-4">
                 Sign up
               </a>
-            </div>
+            </div> */}
           </div>
           {/* </form> */}
         </CardContent>
