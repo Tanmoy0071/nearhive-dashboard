@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/firebase/firebase-admin';
-import { dump } from '@/utils/dump';
+import { dump } from '@/helper/helper';
 
 
 export async function GET(req: NextRequest) {

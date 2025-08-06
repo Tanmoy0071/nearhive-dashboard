@@ -11,13 +11,24 @@ export async function fetchCampaigns() {
 
 
 // create campaign
-export async function createCampaign({title ,productIds } : Campaign) {
+export async function createCampaign({ title, productIds = [] }: Campaign) {
 
-    const campaign = await FirestoreService.addDoc("Campaigns" , {
-        title ,
+    const campaign = await FirestoreService.addDoc("Campaigns", {
+        title,
         productIds
-    }) ;
+    });
 
     return campaign;
+}
 
+
+// update campaign
+export async function updateCampaign(campaignId: string, { title, productIds }: Campaign) {
+
+    const campaign = await FirestoreService.updateDoc("Campaigns", campaignId, {
+        title,
+        productIds
+    });
+
+    return campaign;
 }

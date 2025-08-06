@@ -161,7 +161,7 @@ export type Product = {
   lowerCuisine: string;
   imageUrl: string;
   isAvailable: boolean;
-  lastUpdated: string; // ISO date string
+  lastUpdated: Timestamp; // ISO date string
   name: string;
   lowerName: string;
   productCategory: string;

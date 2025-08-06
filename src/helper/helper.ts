@@ -20,3 +20,8 @@ export function dump(...args: unknown[]): void {
 
   console.log("══════════ DUMP END ════════════");
 }
+
+
+export function toLowerNoSpaces(str: string): string {
+  return str.toLowerCase().replace(/\s+/g, '');
+}

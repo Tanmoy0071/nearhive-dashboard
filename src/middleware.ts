@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dump } from './utils/dump';
+import { dump } from './helper/helper';
 
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  const APP_URL = req.nextUrl.origin ;
 
   if (pathname === '/login') {
     return NextResponse.next();
@@ -10,7 +12,7 @@ export default async function middleware(req: NextRequest) {
 
   const token = req.cookies.get('__session')?.value;
 
-  const res = await fetch(`${process.env.APP_URL}/api/verify?token=${token}`);
+  const res = await fetch(`${APP_URL}/api/verify?token=${token}`);
   const { user } = await res.json();
 
   if (!user) {

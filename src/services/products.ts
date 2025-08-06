@@ -1,5 +1,29 @@
 import { FirestoreService } from "@/firebase/firestoreService";
+import { toLowerNoSpaces } from "@/helper/helper";
 import { Product } from "@/types/backend/models";
+import { Timestamp } from "firebase/firestore";
+
+type Variation = {
+    discount: number;
+    mrp: number;
+    price: number;
+    stockQuantity: number;
+};
+
+
+type ProductCreate = {
+    name: string;
+    image: File;
+    cuisine: string;
+    productCategory: string;
+    storeCategory: string;
+    storeId: string;
+    type: 'Veg' | 'Non Veg';
+    variations: {
+        [key: string]: Variation; // e.g., "half", "full"
+    };
+};
+
 
 export async function fetchProducts() {
     const docs = await FirestoreService.getAllDocs("products")
@@ -7,9 +31,53 @@ export async function fetchProducts() {
     return docs as Product[]
 }
 
-// export async function cre(params:type) {
-    
-// }
+export async function createProduct({
+    name,
+    image,
+    cuisine,
+    productCategory,
+    storeCategory,
+    storeId,
+    type,
+    variations
+}: ProductCreate) {
+
+
+    const docId = FirestoreService.docId();
+
+    try {
+
+
+        const product: Product = {
+            createdAt: Timestamp.now(),
+            cuisine: cuisine,
+            lowerCuisine: toLowerNoSpaces(cuisine),
+            name: name,
+            lowerName: toLowerNoSpaces(name),
+            isAvailable: true,
+            productCategory: productCategory,
+            storeCategory: storeCategory,
+            storeId: storeId,
+            type: type == "Veg" ? "veg" : "nonVeg",
+            variations: variations,
+            rating: 0,
+            lastUpdated: Timestamp.now(),
+            productId: docId,
+            imageUrl: await FirestoreService.uploadFile(image, "Products")
+        }
+
+        await FirestoreService.setDoc("products", docId, product)
+
+        return product
+    }
+
+    catch (error) {
+
+        throw new Error("Failed to create product")
+
+    }
+
+}
 
 
 
