@@ -1,5 +1,7 @@
 import { Timestamp } from "firebase/firestore"; // Use this if using Firestore
 
+
+// type for store
 export type Store = {
   accountHolderName: string;
   accountNumber: string;
@@ -27,13 +29,15 @@ export type Store = {
   };
 }
 
+
+// type for campaign
 export type Campaign = {
-  id: string
-  name: string
-  date: string
+  title: string ;
+  productIds : string[]
+
 }
 
-
+// type for middlemen
 export type Middlemen = {
   address: string;
   age: number;
@@ -56,6 +60,7 @@ export type Middlemen = {
   vehicleRegistrationNumber: string;
 };
 
+// type for user
 export type User = {
   userId: string;
   address: string[]; // Array of address strings
@@ -71,7 +76,27 @@ export type User = {
   storeId: string | null;
 };
 
+//type for cuisine 
+type CuisineProduct = {
+  imageUrl: string;
+  title: string;
+  desc: string;
+};
 
+export type Cuisine = {
+  desc: string;
+  heading: string;
+  lowerHeading: string;
+  image: string;
+  banner: string;
+  subHeading: string;
+  about: string;
+  products: CuisineProduct[]
+};
+
+
+
+// type for orders
 type OrderStatusStep = {
   message: string;
   timestamp: Timestamp | string;
@@ -122,6 +147,7 @@ export type Order = {
 };
 
 
+// type for products
 type ProductVariation = {
   discount: number;
   mrp: number;
@@ -149,6 +175,8 @@ export type Product = {
   rating: number;
 };
 
+
+// type for blogs
 export type Blog = {
   blogId: string;
   title: string;

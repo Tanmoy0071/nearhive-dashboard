@@ -21,6 +21,18 @@ import { db, storage } from "@/firebase/firebase-client";
 
 type FirestoreData = Record<string, any>;
 
+type Condition = {
+  field: string;
+  operator: WhereFilterOp;
+  value: any;
+};
+
+type OrderByField = {
+  field: string;
+  direction?: "asc" | "desc";
+};
+
+
 export const FirestoreService = {
   // 📄 Generate a unique ID
   docId: (): string => uuidv4(),
@@ -64,23 +76,26 @@ export const FirestoreService = {
     return await deleteDoc(ref);
   },
 
-  // 🔎 Get documents with multiple where clauses
-   getByConditions : async (
-    collectionName: string,
-    conditions: [fieldPath: string, opStr: WhereFilterOp, value: any][] = [],
-    orderByFields: { field: string; direction?: "asc" | "desc" }[] = []
-  ): Promise<FirestoreData[]> => {
+
+  getByConditions: async (collectionName: string, conditions: Condition[] = [], orderByFields: OrderByField[] = []): Promise<FirestoreData[]> => {
     const ref = collection(db, collectionName);
 
-    const q = query(
-      ref,
-      ...conditions.map(c => where(...c)),
-      ...orderByFields.map(o => orderBy(o.field, o.direction || "asc"))
-    );
+    const constraints: any[] = [];
+
+    if (conditions.length > 0) {
+      constraints.push(...conditions.map(c => where(c.field, c.operator, c.value)));
+    }
+
+    if (orderByFields.length > 0) {
+      constraints.push(...orderByFields.map(o => orderBy(o.field, o.direction || "asc")));
+    }
+
+    const q = constraints.length > 0 ? query(ref, ...constraints) : ref;
 
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } ,
+  }
+  ,
 
   // 📤 Upload a file and get its download URL
   uploadFile: async (file: File, path: string): Promise<string> => {

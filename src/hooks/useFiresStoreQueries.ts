@@ -70,7 +70,7 @@ export function useOrdersQuery() {
         queryFn: fetchOrders ,
         refetchOnWindowFocus : false ,
         refetchOnMount : false ,
-        // refetchInterval : 5000
+        refetchInterval : 5000
     });
 }
 
