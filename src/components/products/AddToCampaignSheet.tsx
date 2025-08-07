@@ -20,17 +20,21 @@ interface Props {
   productId: string
 }
 
+type CampaignFetch = Campaign & {
+  id: string;
+};
+
 export default function AddToCampaignSheet({ open, onClose, productId }: Props) {
   const { data: campaigns = [], refetch } = useCampaignsQuery()
-  const [localCampaigns, setLocalCampaigns] = useState<Campaign[]>([])
+  const [localCampaigns, setLocalCampaigns] = useState<CampaignFetch[]>([])
 
   useEffect(() => {
     if (campaigns.length) {
-      setLocalCampaigns(campaigns)
+      setLocalCampaigns(campaigns as CampaignFetch[])
     }
   }, [campaigns])
 
-  const handleToggle = async (campaign: Campaign, checked: boolean) => {
+  const handleToggle = async (campaign: CampaignFetch, checked: boolean) => {
     let updatedIds = [...campaign.productIds]
 
     if (checked && !updatedIds.includes(productId)) {
