@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo,useEffect } from "react"
+import React, { useState, useMemo, useEffect } from "react"
 import Image from "next/image"
 import dynamic from "next/dynamic"
 import { useDebounce } from "@/hooks/useDebounce"
@@ -25,10 +25,12 @@ import {
   getPaginationRowModel, useReactTable,
   ColumnDef, SortingState,
 } from "@tanstack/react-table"
-import type { Product } from "@/types/backend/models"
+import { Product } from "@/types/backend/models"
 import { Timestamp } from "firebase/firestore"
+import { Toaster } from "@/components/ui/sonner"
+import { toast } from "sonner"
 
-const AddCampaignDialog = dynamic(() => import("./AddCampaignDialog"), {
+const AddToCampaignSheet = dynamic(() => import("./AddToCampaignSheet"), {
   ssr: false,
   loading: () => <p className="text-sm text-muted-foreground">Loading...</p>,
 })
@@ -39,24 +41,22 @@ export default function ProductTable() {
   const debouncedSearch = useDebounce(searchInput, 500)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({})
+  const [activeProductId, setActiveProductId] = useState<string | null>(null)
 
   const { data: products = [] } = useProductsQuery()
-  console.log(products)
 
-const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({})
-
-useEffect(() => {
-  if (products.length) {
-    setSelectedVariants((prev) => {
-      const updated: Record<string, string> = {}
-      for (const p of products) {
-        updated[p.productId] = Object.keys(p.variations)[0] ?? "default"
-      }
-      return updated
-    })
-  }
-}, [products])
-
+  useEffect(() => {
+    if (products.length) {
+      setSelectedVariants((prev) => {
+        const updated: Record<string, string> = {}
+        for (const p of products) {
+          updated[p.productId] = Object.keys(p.variations)[0] ?? "default"
+        }
+        return updated
+      })
+    }
+  }, [products])
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) =>
@@ -101,64 +101,64 @@ useEffect(() => {
       header: "Name",
       cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
     },
-   {
-  header: "Variant",
-  cell: ({ row }) => {
-    const id = row.original.productId
-    const variants = Object.keys(row.original.variations)
-    const current = selectedVariants[id] || variants[0]
+    {
+      header: "Variant",
+      cell: ({ row }) => {
+        const id = row.original.productId
+        const variants = Object.keys(row.original.variations)
+        const current = selectedVariants[id] || variants[0]
 
-    return (
-      <Select
-        value={current}
-        onValueChange={(value) =>
-          setSelectedVariants((prev) => ({
-            ...prev,
-            [id]: value,
-          }))
-        }
-      >
-        <SelectTrigger className="w-[100px]">
-          <SelectValue placeholder="Select" />
-        </SelectTrigger>
-        <SelectContent>
-          {variants.map((v) => (
-            <SelectItem key={v} value={v}>
-              {v}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    )
-  },
-},
-{
-  header: "Price",
-  cell: ({ row }) => {
-    const id = row.original.productId
-    const variant = selectedVariants[id] || Object.keys(row.original.variations)[0]
-    const price = row.original.variations[variant]?.price
-    return price ? `₹${price}` : "-"
-  },
-},
-{
-  header: "MRP",
-  cell: ({ row }) => {
-    const id = row.original.productId
-    const variant = selectedVariants[id] || Object.keys(row.original.variations)[0]
-    const mrp = row.original.variations[variant]?.mrp
-    return mrp ? `₹${mrp}` : "-"
-  },
-},
-{
-  header: "Discount",
-  cell: ({ row }) => {
-    const id = row.original.productId
-    const variant = selectedVariants[id] || Object.keys(row.original.variations)[0]
-    const discount = row.original.variations[variant]?.discount
-    return discount ? `${discount}%` : "-"
-  },
-},
+        return (
+          <Select
+            value={current}
+            onValueChange={(value) =>
+              setSelectedVariants((prev) => ({
+                ...prev,
+                [id]: value,
+              }))
+            }
+          >
+            <SelectTrigger className="w-[100px]">
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              {variants.map((v) => (
+                <SelectItem key={v} value={v}>
+                  {v}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )
+      },
+    },
+    {
+      header: "Price",
+      cell: ({ row }) => {
+        const id = row.original.productId
+        const variant = selectedVariants[id] || Object.keys(row.original.variations)[0]
+        const price = row.original.variations[variant]?.price
+        return price ? `₹${price}` : "-"
+      },
+    },
+    {
+      header: "MRP",
+      cell: ({ row }) => {
+        const id = row.original.productId
+        const variant = selectedVariants[id] || Object.keys(row.original.variations)[0]
+        const mrp = row.original.variations[variant]?.mrp
+        return mrp ? `₹${mrp}` : "-"
+      },
+    },
+    {
+      header: "Discount",
+      cell: ({ row }) => {
+        const id = row.original.productId
+        const variant = selectedVariants[id] || Object.keys(row.original.variations)[0]
+        const discount = row.original.variations[variant]?.discount
+        return discount ? `${discount}%` : "-"
+      },
+    },
     {
       accessorKey: "isAvailable",
       header: "Availability",
@@ -177,14 +177,14 @@ useEffect(() => {
           ? row.original.createdAt.toDate().toLocaleDateString()
           : "-",
     },
-  {
-  accessorKey: "lastUpdated",
-  header: "Updated",
-  cell: ({ row }) => {
-    const date = row.original.lastUpdated
-    return date instanceof Timestamp ? date.toDate().toLocaleDateString() : "-"
-  },
-},
+    {
+      accessorKey: "lastUpdated",
+      header: "Updated",
+      cell: ({ row }) => {
+        const date = row.original.lastUpdated
+        return date instanceof Timestamp ? date.toDate().toLocaleDateString() : "-"
+      },
+    },
     {
       accessorKey: "cuisine",
       header: "Cuisine",
@@ -198,27 +198,20 @@ useEffect(() => {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => {
-        const [openDialog, setOpenDialog] = useState(false)
+        const productId = row.original.productId
 
         return (
           <div className="flex gap-2">
             <Button variant="outline" size="sm">Edit</Button>
             <Button variant="destructive" size="sm">Delete</Button>
-            <Button variant="secondary" size="sm" onClick={() => setOpenDialog(true)}>
+            <Button variant="secondary" size="sm" onClick={() => setActiveProductId(productId)}>
               Add Campaign
             </Button>
 
-            <AddCampaignDialog
-              open={openDialog}
-              onClose={() => setOpenDialog(false)}
-              campaigns={[
-                {
-                  id: "1",
-                  name: "Independence Sale",
-                  date: "2025-08-15",
-                  headings: ["Freedom Combo", "Discount Bonanza"],
-                },
-              ]}
+            <AddToCampaignSheet
+              open={activeProductId === productId}
+              onClose={() => setActiveProductId(null)}
+              productId={productId}
             />
           </div>
         )
@@ -239,6 +232,7 @@ useEffect(() => {
 
   return (
     <div className="space-y-4">
+      <Toaster />
       <div className="flex justify-between items-center mb-4">
         <Input
           placeholder="Search product name..."
