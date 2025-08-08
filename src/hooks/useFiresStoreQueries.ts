@@ -1,6 +1,7 @@
 import { fetchBlogs } from "@/services/blogs";
 import { fetchCampaigns } from "@/services/campaings";
 import { fetchCustomers } from "@/services/customers";
+import {  fetchPendingCreators, fetchVerifiedCreators } from "@/services/hiveCreators";
 import { fetchMiddlemen } from "@/services/middlemen";
 import { fetchOrders } from "@/services/orders";
 import { fetchProducts } from "@/services/products";
@@ -86,6 +87,30 @@ export function useCampaignsQuery() {
         // refetchInterval : 5000
     });
 }
+
+// Hook for pending hivecreators
+export function usePendingCreatorsQuery() {
+    return useQuery({
+        queryKey: ["pendingCreators"],
+        queryFn: fetchPendingCreators ,
+        refetchOnWindowFocus : false ,
+        refetchOnMount : false ,
+        // refetchInterval : 5000
+    });
+}
+
+
+// Hook for pending hivecreators
+export function useVerifiedCreatorsQuery() {
+    return useQuery({
+        queryKey: ["verifiedCreators"],
+        queryFn: fetchVerifiedCreators ,
+        refetchOnWindowFocus : false ,
+        refetchOnMount : false ,
+        // refetchInterval : 5000
+    });
+}
+
 
 
 
