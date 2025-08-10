@@ -1,70 +1,88 @@
-"use client"
+"use client";
 
-import React, { useState } from "react"
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
-import ImageUploadWithPreview from "@/components/ImageUploadWithPreview"
+import ImageUploadWithPreview from "@/components/ImageUploadWithPreview";
 
-import type { Cuisine } from "@/types/backend/models"
+import type { Cuisine } from "@/types/backend/models";
+import { createCuisine } from "@/services/cuisine";
+import { FirestoreService } from "@/firebase/firestoreService";
 
 export default function AddCuisine() {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
-  const [formData, setFormData] = useState<Omit<Cuisine, "image" | "banner" | "products" | "lowerHeading">>({
+  const [formData, setFormData] = useState<
+    Omit<Cuisine, "image" | "banner" | "products" | "lowerHeading">
+  >({
     desc: "",
     heading: "",
     subHeading: "",
     about: "",
-  })
+  });
 
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [bannerFile, setBannerFile] = useState<File | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
 
   const [products, setProducts] = useState<
-    { title: string; desc: string; image: File | null }[]
-  >([
-    { title: "", desc: "", image: null },
-  ])
+    { title: string; desc: string; imageUrl: File | null }[]
+  >([{ title: "", desc: "", imageUrl: null }]);
 
   const handleProductChange = (
     index: number,
     field: "title" | "desc",
     value: string
   ) => {
-    const updated = [...products]
-    updated[index][field] = value
-    setProducts(updated)
-  }
+    const updated = [...products];
+    updated[index][field] = value;
+    setProducts(updated);
+  };
 
   const handleProductImageChange = (index: number, file: File | null) => {
-    const updated = [...products]
-    updated[index].image = file
-    setProducts(updated)
-  }
+    const updated = [...products];
+    updated[index].imageUrl = file;
+    setProducts(updated);
+  };
 
   const handleAddProduct = () => {
-    setProducts([...products, { title: "", desc: "", image: null }])
-  }
+    setProducts([...products, { title: "", desc: "", imageUrl: null }]);
+  };
 
-  const handleSubmit = () => {
-    console.log({
+  const handleSubmit = async () => {
+    if (!imageFile || !bannerFile) {
+      return alert("Image or Banner is missing");
+    }
+
+    if (!products[0].imageUrl) {
+      return alert("Products Image  is missing");
+    }
+
+    const cuisine = {
       ...formData,
-      imageFile,
-      bannerFile,
+      image: imageFile,
+      banner: bannerFile,
       products,
-    })
-    setOpen(false)
-  }
+    };
+
+    try {
+      await createCuisine(cuisine);
+      alert("Cuisine Created");
+    } catch (error) {
+      alert("Failed to create Cuisine ");
+    }
+
+    setOpen(false);
+  };
 
   return (
     <>
@@ -143,7 +161,7 @@ export default function AddCuisine() {
                   key={index}
                   className="grid grid-cols-3 gap-4 border p-4 rounded-md bg-muted"
                 >
-                     <div>
+                  <div>
                     <ImageUploadWithPreview
                       label="Product Image"
                       id={`product-image-${index}`}
@@ -170,11 +188,14 @@ export default function AddCuisine() {
                       }
                     />
                   </div>
-                 
                 </div>
               ))}
 
-              <Button type="button" onClick={handleAddProduct} variant="outline">
+              <Button
+                type="button"
+                onClick={handleAddProduct}
+                variant="outline"
+              >
                 + Add New Product
               </Button>
             </div>
@@ -186,5 +207,5 @@ export default function AddCuisine() {
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

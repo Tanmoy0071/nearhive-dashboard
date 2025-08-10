@@ -3,8 +3,8 @@ import { Blog } from "@/types/backend/models";
 import { Timestamp } from "firebase/firestore";
 
 // Fetch all blogs 
-export async function fetchBlogs() {
-  
+export async function fetchBlogs() : Promise<Blog[]> {
+
   const blogs = await FirestoreService.getAllDocs("Blogs") as Blog[];
 
   return blogs;
@@ -21,7 +21,7 @@ export async function createBlog({
   description: string;
   thumbnail: File;
   content: string;
-}) {
+}) : Promise<Blog> {
 
   const docId = FirestoreService.docId();
 
@@ -47,11 +47,8 @@ export async function createBlog({
 }
 
 // delete blog
-export async function deleteBlog(id: string) {
-  try {
-    await FirestoreService.deleteDoc("Blogs", id);
-    return id
-  } catch (error) {
-    throw new Error("Error deleting blog id")
-  }
+export async function deleteBlog(id: string): Promise<string> {
+  await FirestoreService.deleteDoc("Blogs", id);
+  return id
+
 }
