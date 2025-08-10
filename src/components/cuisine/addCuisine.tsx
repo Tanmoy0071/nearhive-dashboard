@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import ImageUploadWithPreview from "@/components/ImageUploadWithPreview";
 
 import type { Cuisine } from "@/types/backend/models";
-import { createCuisine } from "@/services/cuisine";
+import { createCuisine } from "@/services/cuisines";
 import { FirestoreService } from "@/firebase/firestoreService";
 
 export default function AddCuisine() {
