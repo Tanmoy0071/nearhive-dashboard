@@ -25,6 +25,18 @@ type ProductCreate = {
 };
 
 
+type ProductUpdate = {
+    name?: string;
+    cuisine?: string;
+    // productCategory: string;
+    image?: File;
+    type?: 'Veg' | 'Non Veg';
+    variations?: {
+        [key: string]: Variation; // e.g., "half", "full"
+    };
+};
+
+
 export async function fetchProducts() {
     const docs = await FirestoreService.getAllDocs("products")
 
@@ -79,6 +91,54 @@ export async function createProduct({
 
 }
 
+
+export async function updateProduct(product: Product, {
+    name,
+    image,
+    cuisine,
+    type,
+    variations
+}: ProductUpdate) {
+
+
+    const docId = product.productId;
+
+    try {
+
+
+        const updateProduct: Partial<Product> = {
+            cuisine: cuisine ?? product.cuisine,
+            lowerCuisine: cuisine ? toLowerNoSpaces(cuisine) : product.cuisine,
+            name: name ?? product.name,
+            lowerName: name ? toLowerNoSpaces(name) : product.lowerName,
+            type: type ? (type == "Veg" ? "veg" : "nonVeg") : product.type,
+            imageUrl: image ? await FirestoreService.uploadFile(image, "Products") : product.imageUrl,
+            variations: variations ?? product.variations,
+
+
+            createdAt: product.createdAt,
+            isAvailable: product.isAvailable,
+            productCategory: product.productCategory,
+            storeCategory: product.storeCategory,
+            storeId: product.storeId,
+            rating: product.rating,
+            lastUpdated: Timestamp.now(),
+            productId: product.productId,
+
+        }
+
+        await FirestoreService.updateDoc("products", docId, updateProduct)
+
+        return updateProduct
+    }
+
+    catch (error) {
+        throw new Error("Failed to update product")
+
+
+    }
+
+}
 
 
 //     const docId = FirestoreService.docId()
