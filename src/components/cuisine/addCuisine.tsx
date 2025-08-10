@@ -12,15 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-
 import ImageUploadWithPreview from "@/components/ImageUploadWithPreview";
-
 import type { Cuisine } from "@/types/backend/models";
 import { createCuisine } from "@/services/cuisines";
-import { FirestoreService } from "@/firebase/firestoreService";
+import { toast } from "sonner";
 
 export default function AddCuisine() {
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState<
     Omit<Cuisine, "image" | "banner" | "products" | "lowerHeading">
@@ -60,11 +59,13 @@ export default function AddCuisine() {
 
   const handleSubmit = async () => {
     if (!imageFile || !bannerFile) {
-      return alert("Image or Banner is missing");
+      toast.error("Image or Banner is missing");
+      return;
     }
 
     if (!products[0].imageUrl) {
-      return alert("Products Image  is missing");
+      toast.error("Product image is missing");
+      return;
     }
 
     const cuisine = {
@@ -74,14 +75,21 @@ export default function AddCuisine() {
       products,
     };
 
+    setLoading(true);
     try {
       await createCuisine(cuisine);
-      alert("Cuisine Created");
+      toast.success("Cuisine created successfully");
+      setOpen(false);
+      // Reset form after success
+      setFormData({ desc: "", heading: "", subHeading: "", about: "" });
+      setImageFile(null);
+      setBannerFile(null);
+      setProducts([{ title: "", desc: "", imageUrl: null }]);
     } catch (error) {
-      alert("Failed to create Cuisine ");
+      toast.error("Failed to create Cuisine");
+    } finally {
+      setLoading(false);
     }
-
-    setOpen(false);
   };
 
   return (
@@ -201,7 +209,9 @@ export default function AddCuisine() {
             </div>
 
             <div className="pt-4">
-              <Button onClick={handleSubmit}>Submit</Button>
+              <Button onClick={handleSubmit} disabled={loading}>
+                {loading ? "Submitting..." : "Submit"}
+              </Button>
             </div>
           </div>
         </DialogContent>

@@ -23,24 +23,32 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 import ImageUploadWithPreview from "@/components/ImageUploadWithPreview"
-
-const storeOptions = ["Store A", "Store B", "Store C", "SuperMart", "QuickBite"]
+import { createProduct } from "@/services/products" // adjust path
+import { useStoresQuery } from "@/hooks/useFiresStoreQueries"   // adjust path
+import { useCuisinesQuery } from "@/hooks/useFiresStoreQueries" // adjust path
+import type { Store, Cuisine } from "@/types/backend/models"
 
 const AddProducts: React.FC = () => {
+  const { data: stores = [], isLoading: storeLoading } = useStoresQuery()
+  const { data: cuisines = [], isLoading: cuisinesLoading } = useCuisinesQuery()
+
+  const [loading, setLoading] = useState(false)
   const [productImage, setProductImage] = useState<File | null>(null)
   const [productType, setProductType] = useState("")
-  const [cuisineType, setCuisineType] = useState("")
-  const [foodType, setFoodType] = useState("veg")
+  const [cuisine, setCuisine] = useState<Cuisine | null>(null)
+  const [foodType, setFoodType] = useState<"veg" | "non-veg">("veg")
   const [productName, setProductName] = useState("")
   const [hasVariations, setHasVariations] = useState(false)
   const [selectedVariations, setSelectedVariations] = useState<string[]>([])
   const [variationData, setVariationData] = useState<Record<string, { mrp: number; discount: number }>>({})
   const [globalMRP, setGlobalMRP] = useState<number>(0)
   const [globalDiscount, setGlobalDiscount] = useState<number>(0)
-  const [store, setStore] = useState("")
+  const [store, setStore] = useState<Store | null>(null)
   const [storeDropdownOpen, setStoreDropdownOpen] = useState(false)
+  const [cuisineDropdownOpen, setCuisineDropdownOpen] = useState(false)
 
   const defaultVariations = ["Half", "Full", "Small", "Medium", "Large"]
   const bakeryVariations = ["1 Pound", "1.2 Pound"]
@@ -71,8 +79,70 @@ const AddProducts: React.FC = () => {
     }))
   }
 
-  const getFinalPrice = (mrp: number, discount: number) =>
-    (mrp - (mrp * discount) / 100).toFixed(2)
+  // Always round up final price
+  const getFinalPrice = (mrp: number, discount: number) => {
+    const discounted = mrp - (mrp * discount) / 100
+    return Math.ceil(discounted)
+  }
+
+  const handleSave = async () => {
+ if (!store) return toast.error("Please select a store");
+  if (!productName.trim()) return toast.error("Product name is required");
+  if (!productImage) return toast.error("Product image is required");
+  if (!cuisine) return toast.error("Please select a cuisine");
+
+    setLoading(true)
+    try {
+      const variationsObj: Record<string, any> = {}
+
+      if (hasVariations) {
+        selectedVariations.forEach((v) => {
+          const { mrp, discount } = variationData[v]
+          variationsObj[v.toLowerCase()] = {
+            mrp,
+            discount,
+            price: getFinalPrice(mrp, discount),
+            stockQuantity: 0
+          }
+        })
+      } else {
+        variationsObj["default"] = {
+          mrp: globalMRP,
+          discount: globalDiscount,
+          price: getFinalPrice(globalMRP, globalDiscount),
+          stockQuantity: 0
+        }
+      }
+
+      await createProduct({
+        name: productName,
+        image: productImage,
+        cuisine: cuisine.heading, // store the heading of cuisine
+        productCategory: productType,
+        storeCategory: store.category,
+        storeId: store.storeId,
+        type: foodType === "veg" ? "Veg" : "Non Veg",
+        variations: variationsObj
+      })
+
+    toast.success("Product created successfully!");
+      setProductName("")
+      setProductImage(null)
+      setCuisine(null)
+      setProductType("")
+      setSelectedVariations([])
+      setVariationData({})
+      setGlobalMRP(0)
+      setGlobalDiscount(0)
+      setHasVariations(false)
+      setStore(null)
+    } catch (err) {
+      console.error(err)
+    toast.error("Failed to create product");
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <Dialog>
@@ -99,7 +169,7 @@ const AddProducts: React.FC = () => {
                     aria-expanded={storeDropdownOpen}
                     className="w-full justify-between"
                   >
-                    {store || "Select store"}
+                    {store ? store.name : storeLoading ? "Loading..." : "Select store"}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
@@ -108,19 +178,19 @@ const AddProducts: React.FC = () => {
                     <CommandInput placeholder="Search store..." />
                     <CommandEmpty>No store found.</CommandEmpty>
                     <CommandGroup>
-                      {storeOptions.map((option) => (
+                      {stores.map((option: Store) => (
                         <CommandItem
-                          key={option}
-                          value={option}
-                          onSelect={(value) => {
-                            setStore(value)
+                          key={option.storeId}
+                          value={option.name}
+                          onSelect={() => {
+                            setStore(option)
                             setStoreDropdownOpen(false)
                           }}
                         >
                           <Check
-                            className={cn("mr-2 h-4 w-4", store === option ? "opacity-100" : "opacity-0")}
+                            className={cn("mr-2 h-4 w-4", store?.storeId === option.storeId ? "opacity-100" : "opacity-0")}
                           />
-                          {option}
+                          {option.name}
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -129,13 +199,13 @@ const AddProducts: React.FC = () => {
               </Popover>
             </div>
 
-            {/* Image Upload with Preview */}
-         <ImageUploadWithPreview
-  label="Upload Product Image"
-  onFileChange={(file) => setProductImage(file)}
-  previewClassName="w-32 h-32"
-/>
-
+            {/* Image Upload */}
+            <ImageUploadWithPreview
+              id="upload"
+              label="Upload Product Image"
+              onFileChange={(file) => setProductImage(file)}
+              previewClassName="w-32 h-32"
+            />
 
             {/* Product Type */}
             <div className="flex flex-col gap-2">
@@ -159,16 +229,51 @@ const AddProducts: React.FC = () => {
               </Select>
             </div>
 
-            {/* Cuisine Type */}
+            {/* Cuisine Type Combobox */}
             <div className="flex flex-col gap-2">
               <Label>Cuisine Type</Label>
-              <Input value={cuisineType} onChange={(e) => setCuisineType(e.target.value)} />
+              <Popover open={cuisineDropdownOpen} onOpenChange={setCuisineDropdownOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={cuisineDropdownOpen}
+                    className="w-full justify-between"
+                  >
+                    {cuisine ? cuisine.heading : cuisinesLoading ? "Loading..." : "Select cuisine"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput placeholder="Search cuisine..." />
+                    <CommandEmpty>No cuisine found.</CommandEmpty>
+                    <CommandGroup>
+                      {cuisines.map((option: Cuisine) => (
+                        <CommandItem
+                          key={option.heading}
+                          value={option.heading}
+                          onSelect={() => {
+                            setCuisine(option)
+                            setCuisineDropdownOpen(false)
+                          }}
+                        >
+                          <Check
+                            className={cn("mr-2 h-4 w-4", cuisine?.heading === option.heading ? "opacity-100" : "opacity-0")}
+                          />
+                          {option.heading}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Food Type */}
             <div className="flex flex-col gap-2">
               <Label>Food Type</Label>
-              <Select value={foodType} onValueChange={setFoodType}>
+              <Select value={foodType} onValueChange={(v: "veg" | "non-veg") => setFoodType(v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select food type" />
                 </SelectTrigger>
@@ -274,7 +379,9 @@ const AddProducts: React.FC = () => {
         </ScrollArea>
 
         <div className="flex justify-end mt-4">
-          <Button type="submit">Save Product</Button>
+          <Button type="button" onClick={handleSave} disabled={loading}>
+            {loading ? "Saving..." : "Save Product"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -27,7 +27,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+
+
 import { useDebounce } from "@/hooks/useDebounce" // ⬅️ make sure the path is correct
+import { usePendingCreatorsQuery } from "@/hooks/useFiresStoreQueries"
 
 type HiveUser = {
   id: string
@@ -179,6 +182,10 @@ const filteredData = useMemo(() => {
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   })
+
+const { data: creators } = usePendingCreatorsQuery();
+console.log(creators);
+
 
   return (
     <>

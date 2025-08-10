@@ -27,8 +27,9 @@ import {
 } from "@tanstack/react-table"
 import { Product } from "@/types/backend/models"
 import { Timestamp } from "firebase/firestore"
-import { Toaster } from "@/components/ui/sonner"
+
 import { toast } from "sonner"
+import EditProduct from "./editProduct"
 
 const AddToCampaignSheet = dynamic(() => import("./AddToCampaignSheet"), {
   ssr: false,
@@ -36,6 +37,8 @@ const AddToCampaignSheet = dynamic(() => import("./AddToCampaignSheet"), {
 })
 
 export default function ProductTable() {
+  const [editProduct, setEditProduct] = useState<Product | null>(null);
+
   const [sorting, setSorting] = useState<SortingState>([])
   const [searchInput, setSearchInput] = useState("")
   const debouncedSearch = useDebounce(searchInput, 500)
@@ -202,7 +205,10 @@ export default function ProductTable() {
 
         return (
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">Edit</Button>
+          <Button variant="outline" size="sm" onClick={() => setEditProduct(row.original)}>
+  Edit
+</Button>
+
             <Button variant="destructive" size="sm">Delete</Button>
             <Button variant="secondary" size="sm" onClick={() => setActiveProductId(productId)}>
               Add Campaign
@@ -232,7 +238,7 @@ export default function ProductTable() {
 
   return (
     <div className="space-y-4">
-      <Toaster />
+
       <div className="flex justify-between items-center mb-4">
         <Input
           placeholder="Search product name..."
@@ -307,6 +313,16 @@ export default function ProductTable() {
           Next
         </Button>
       </div>
+      {editProduct && (
+  <EditProduct
+    open={!!editProduct}
+    onClose={() => setEditProduct(null)}
+    product={editProduct}
+  />
+)}
     </div>
+    
   )
 }
+
+

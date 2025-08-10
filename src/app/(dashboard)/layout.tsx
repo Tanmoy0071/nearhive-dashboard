@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Urbanist } from "next/font/google";
 import "@/app/globals.css";
 import AppSidebar from "@/components/AppSidebar";
-import { Urbanist } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { cookies } from "next/headers";
 import Providers from "@/providers/Providers";
+import { Toaster } from "sonner"; // ✅ Import Sonner Toaster
 
 const urbanist = Urbanist({
   variable: "--font-urbanist",
   subsets: ["latin"],
-  display: "swap", // Optional: improves performance
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -38,6 +38,7 @@ export default async function RootLayout({
               <div className="px-4">{children}</div>
             </main>
           </SidebarProvider>
+<Toaster position="top-right" richColors closeButton />
         </Providers>
       </body>
     </html>
