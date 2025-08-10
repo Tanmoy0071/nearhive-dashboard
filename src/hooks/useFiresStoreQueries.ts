@@ -1,5 +1,6 @@
 import { fetchBlogs } from "@/services/blogs";
 import { fetchCampaigns } from "@/services/campaings";
+import { fetchCuisines } from "@/services/cuisines";
 import { fetchCustomers } from "@/services/customers";
 import {  fetchPendingCreators, fetchVerifiedCreators } from "@/services/hiveCreators";
 import { fetchMiddlemen } from "@/services/middlemen";
@@ -77,6 +78,20 @@ export function useOrdersQuery() {
 }
 
 
+// Hook for cuisines
+export function useCuisinesQuery() {
+    return useQuery({
+        queryKey: ["cuisines"],
+        queryFn: fetchCuisines ,
+        refetchOnWindowFocus : false ,
+        refetchOnMount : false ,
+        // refetchInterval : 5000
+    });
+}
+
+
+
+
 // Hook for campaigns
 export function useCampaignsQuery() {
     return useQuery({
@@ -110,7 +125,6 @@ export function useVerifiedCreatorsQuery() {
         // refetchInterval : 5000
     });
 }
-
 
 
 

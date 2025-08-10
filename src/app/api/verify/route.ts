@@ -3,9 +3,7 @@ import { adminAuth, adminDb } from '@/firebase/firebase-admin';
 import { dump } from '@/helper/helper';
 
 
-export async function GET(req: NextRequest) {
-    console.log(process.env.FIREBASE_PROJECT_ID , "env");
-    
+export async function GET(req: NextRequest) {    
 
     const token = req.nextUrl.searchParams.get("token");
 
