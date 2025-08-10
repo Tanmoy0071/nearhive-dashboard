@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "update": "git pull origin main && npm install"
+    "update": "git pull origin main && npm install",
+    "dev": "echo Using development keys && env-cmd -f .env.development next dev --turbopack",
+    "dev:prod": "echo Using PRODUCTION keys && env-cmd -f .env.production next dev --turbopack"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
@@ -58,6 +59,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "env-cmd": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
     "tailwindcss": "^4",

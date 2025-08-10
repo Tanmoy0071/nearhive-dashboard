@@ -4,6 +4,8 @@ import { dump } from '@/helper/helper';
 
 
 export async function GET(req: NextRequest) {
+    console.log(process.env.FIREBASE_PROJECT_ID , "env");
+    
 
     const token = req.nextUrl.searchParams.get("token");
 
