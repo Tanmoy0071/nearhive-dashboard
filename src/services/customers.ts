@@ -1,17 +1,23 @@
 import { FirestoreService } from "@/firebase/firestoreService";
-import {  Order, User } from "@/types/backend/models";
+import { Order, User } from "@/types/backend/models";
 
 
-export async function fetchCustomers() {
+export async function fetchCustomers() : Promise<User[]> {
   // Fetch all users and orders
-  const users = await FirestoreService.getAllDocs("Users") as User[];
+  // 1. Fetch all orders
   const orders = await FirestoreService.getAllDocs("Orders") as Order[];
 
-  // Extract user IDs from orders
-  const usersWithOrders = new Set(orders.map(order => order.userId));
+  // 2. Extract unique user IDs from orders
+  const userIds = Array.from(new Set(orders.map(order => order.userId)));
 
-  // Filter users who are in the orders list
-  const customers = users.filter(user => usersWithOrders.has(user.userId));
+  // 3. Fetch only those users
+  const usersWithOrders = await Promise.all(
+    userIds.map(id => FirestoreService.getDoc("Users", id) as Promise<User | null>)
+  );
+
+  // 4. Filter out nulls (if a user record doesn't exist)
+  const customers = usersWithOrders.filter((user): user is User => user !== null);
 
   return customers;
+
 }

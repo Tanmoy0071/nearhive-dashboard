@@ -32,8 +32,8 @@ export type Store = {
 
 // type for campaign
 export type Campaign = {
-  title: string ;
-  productIds : string[]
+  title: string;
+  productIds: string[]
 
 }
 
@@ -62,7 +62,9 @@ export type Middlemen = {
 
 // type for user
 export type User = {
-  userId: string;
+  uid: string;
+  isCreator : boolean ;
+  isWaiting : boolean ;
   address: string[]; // Array of address strings
   createdAt: Timestamp; // Firestore timestamp or ISO string
   email: string;
@@ -185,3 +187,18 @@ export type Blog = {
   content: string;
   createdAt: Timestamp; // ISO date string
 }
+
+//type for hive creators request
+export type CreatorsWaitinglist = {
+  cuisines: string[];
+  description: string;
+  email: string;
+  favfood: string;
+  name: string;
+  phone: string;
+  social: string;
+  store: string;
+  userId: string;
+}
+
+
