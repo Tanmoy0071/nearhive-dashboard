@@ -12,8 +12,7 @@ export default async function page() {
 
     console.log(
 
-      await removeFromFeaturedStores("456") , 
-      await fetchFeaturedStores()
+    await fetchPendingCreators()
 
     );
     
