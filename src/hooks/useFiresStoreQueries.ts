@@ -2,6 +2,8 @@ import { fetchBlogs } from "@/services/blogs";
 import { fetchCampaigns } from "@/services/campaings";
 import { fetchCuisines } from "@/services/cuisines";
 import { fetchCustomers } from "@/services/customers";
+import { fetchFeaturedStores } from "@/services/featuredStores";
+import { fetchFoodPlaylist } from "@/services/foodPlaylist";
 import {  fetchPendingCreators, fetchVerifiedCreators } from "@/services/hiveCreators";
 import { fetchMiddlemen } from "@/services/middlemen";
 import { fetchOrders } from "@/services/orders";
@@ -123,6 +125,28 @@ export function useVerifiedCreatorsQuery() {
         refetchOnWindowFocus : false ,
         refetchOnMount : false ,
         // refetchInterval : 5000
+    });
+}
+
+
+// Hook for featured stores
+export function useFeaturedStoresQuery() {
+    return useQuery({
+        queryKey: ["featuredStores"],
+        queryFn: fetchFeaturedStores ,
+        refetchOnWindowFocus : false ,
+        refetchOnMount : false ,
+    });
+}
+
+
+// Hook for food playlist
+export function useFoodPlaylistQuery() {
+    return useQuery({
+        queryKey: ["foodPlaylist"],
+        queryFn: fetchFoodPlaylist ,
+        refetchOnWindowFocus : false ,
+        refetchOnMount : false ,
     });
 }
 

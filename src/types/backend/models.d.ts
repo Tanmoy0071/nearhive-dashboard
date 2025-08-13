@@ -29,7 +29,6 @@ export type Store = {
   };
 }
 
-
 // type for campaign
 export type Campaign = {
   title: string;
@@ -95,7 +94,6 @@ export type Cuisine = {
   about: string;
   products: CuisineProduct[]
 };
-
 
 
 // type for orders
@@ -201,4 +199,14 @@ export type CreatorsWaitinglist = {
   userId: string;
 }
 
+//type for featured stores
+export type FeaturedStores = {
+    stores: string[]
+}
 
+// type for food playlist
+export type FoodPlaylist = {
+  image : string ;
+  productIds : string[] ;
+  text : string ;
+}

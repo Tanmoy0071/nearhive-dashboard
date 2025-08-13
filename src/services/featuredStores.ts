@@ -1,9 +1,8 @@
 import { FirestoreService } from "@/firebase/firestoreService";
+import { FeaturedStores } from "@/types/backend/models";
 import { arrayRemove, arrayUnion } from "firebase/firestore";
 
-type FeaturedStores = {
-    stores: string[]
-}
+
 
 // Fetch featured stores 
 export async function fetchFeaturedStores() {
@@ -12,7 +11,6 @@ export async function fetchFeaturedStores() {
 
     return stores;
 }
-
 
 // add to featured
 export async function addToFeaturedStores(storeId: string) {
@@ -24,6 +22,7 @@ export async function addToFeaturedStores(storeId: string) {
 
     return storeId;
 }
+
 // remove from featured
 export async function removeFromFeaturedStores(storeId: string) {
 
