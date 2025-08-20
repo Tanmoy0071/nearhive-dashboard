@@ -210,3 +210,12 @@ export type FoodPlaylist = {
   productIds : string[] ;
   text : string ;
 }
+
+
+// type for middlemen earning
+export type MiddlemenEarning = {
+    amount: number;
+    date: string;
+    earning: number;
+    orderId: string;
+}

@@ -4,6 +4,7 @@ import { FirestoreService } from "@/firebase/firestoreService";
 import { dump } from "@/helper/helper";
 import { addToFeaturedStores, fetchFeaturedStores, removeFromFeaturedStores } from "@/services/featuredStores";
 import { fetchPendingCreators, fetchVerifiedCreators } from "@/services/hiveCreators";
+import { fetchMiddlemenEarning } from "@/services/middlemen";
 import { Timestamp } from "firebase/firestore";
 import React, { useEffect } from "react";
 
@@ -12,7 +13,7 @@ export default async function page() {
 
     console.log(
 
-    await fetchPendingCreators()
+    await fetchMiddlemenEarning("subhrojy1706")
 
     );
     

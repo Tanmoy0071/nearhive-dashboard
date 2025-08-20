@@ -11,17 +11,8 @@ export async function fetchBlogs() : Promise<Blog[]> {
 }
 
 // create blog
-export async function createBlog({
-  title,
-  description,
-  thumbnail,
-  content
-}: {
-  title: string;
-  description: string;
-  thumbnail: File;
-  content: string;
-}) : Promise<Blog> {
+export async function createBlog({title,description,thumbnail,content}: { title: string, description: string,thumbnail: File , content: string })
+ : Promise<Blog> {
 
   const docId = FirestoreService.docId();
 

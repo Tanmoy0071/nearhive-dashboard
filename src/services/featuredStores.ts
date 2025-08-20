@@ -5,7 +5,7 @@ import { arrayRemove, arrayUnion } from "firebase/firestore";
 
 
 // Fetch featured stores 
-export async function fetchFeaturedStores() {
+export async function fetchFeaturedStores() : Promise<FeaturedStores> {
 
     const stores = await FirestoreService.getDoc("Featured Stores", "featured-stores") as FeaturedStores;
 
@@ -13,7 +13,7 @@ export async function fetchFeaturedStores() {
 }
 
 // add to featured
-export async function addToFeaturedStores(storeId: string) {
+export async function addToFeaturedStores(storeId: string) : Promise<string> {
 
     await FirestoreService.updateDoc("Featured Stores", "featured-stores", {
 
@@ -24,7 +24,7 @@ export async function addToFeaturedStores(storeId: string) {
 }
 
 // remove from featured
-export async function removeFromFeaturedStores(storeId: string) {
+export async function removeFromFeaturedStores(storeId: string) : Promise<string> {
 
     await FirestoreService.updateDoc("Featured Stores", "featured-stores", {
 
