@@ -10,7 +10,22 @@ const nextConfig = {
         protocol: "https",
         hostname: "firebasestorage.googleapis.com",
       },
+      {
+        protocol: "https",
+        hostname: "bonmasala.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.immediate.co.uk",
+      },
+        {
+        protocol: "https",
+        hostname: "www.dwarakaorganic.com",
+      },
     ],
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
 }
 

@@ -18,13 +18,14 @@ export async function fetchFoodPlaylist() {
 
 
 // create list 
-export async function createFoodPlaylist({ image, productIds, text }: CreateFoodPlaylist) {
+export async function createFoodPlaylist({ image, productIds =[], text }: CreateFoodPlaylist) {
 
     const list = {
-        image: FirestoreService.uploadFile(image, "FoodPlaylist",),
+        image: await FirestoreService.uploadFile(image, "FoodPlaylist",),
         productIds,
         text
     };
+
 
     await FirestoreService.addDoc("Foodplaylist", list);
 
@@ -35,6 +36,7 @@ export async function createFoodPlaylist({ image, productIds, text }: CreateFood
 // update list 
 export async function updateFoodPlaylist(playlistId: string, { image, productIds, text }: Partial<CreateFoodPlaylist>) {
     const list = {
+        image,
         productIds,
         text
     };
