@@ -39,7 +39,7 @@ export async function updateFoodPlaylist(playlistId: string, { image, productIds
         text
     };
 
-    await FirestoreService.setDoc("Foodplaylist", playlistId, list);
+    await FirestoreService.updateDoc("Foodplaylist", playlistId, list);
 
     return list;
 }
