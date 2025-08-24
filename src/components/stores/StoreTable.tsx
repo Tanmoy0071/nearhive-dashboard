@@ -20,14 +20,20 @@ import {
 import { Switch } from "@/components/ui/switch"
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { useStoresQuery } from "@/hooks/useFiresStoreQueries"
-import {Store} from '@/types/backend/models'
+import {
+  useFeaturedStoresQuery,
+  useStoresQuery,
+} from "@/hooks/useFiresStoreQueries"
+import { Store, FeaturedStores } from "@/types/backend/models"
+import {
+  addToFeaturedStores,
+  removeFromFeaturedStores,
+} from "@/services/featuredStores" 
 
 const ITEMS_PER_PAGE = 10
 
@@ -49,8 +55,14 @@ function StoreTable() {
   const [currentPage, setCurrentPage] = useState(1)
 
   const { data: storesData = [], isLoading } = useStoresQuery()
+const { data: FeaturedData, refetch: refetchFeatured } =
+  useFeaturedStoresQuery() as { data?: FeaturedStores; refetch: () => void };
 
-  console.log(storesData)
+
+
+  const featuredIds = useMemo(() => {
+    return new Set(FeaturedData?.stores ?? [])
+  }, [FeaturedData])
 
   const filtered = useMemo(() => {
     return storesData.filter((store) =>
@@ -63,6 +75,21 @@ function StoreTable() {
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   )
+
+
+  const handleToggleFeatured = async (storeId: string, isNowFeatured: boolean) => {
+    try {
+      if (isNowFeatured) {
+        await addToFeaturedStores(storeId)
+      } else {
+        await removeFromFeaturedStores(storeId)
+      }
+    
+      refetchFeatured()
+    } catch (err) {
+      console.error("Error updating featured status:", err)
+    }
+  }
 
   return (
     <div className="w-full px-4 py-6">
@@ -94,48 +121,63 @@ function StoreTable() {
               <TableHead>Email</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Featured</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-6">
+                <TableCell colSpan={9} className="text-center py-6">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : paginatedData.length > 0 ? (
-              paginatedData.map((store, idx) => (
-                <TableRow key={idx}>
-                  <TableCell>{store.storeId}</TableCell>
-                  <TableCell>{store.name}</TableCell>
-                  <TableCell>{store.category}</TableCell>
-                  <TableCell>{store.phone}</TableCell>
-                  <TableCell>{store.email}</TableCell>
-                  <TableCell>{store.location}</TableCell>
-                  <TableCell>
-                    {store.isBlocked
-                      ? "Blocked"
-                      : store.isPaused
-                      ? "Paused"
-                      : store.isActive
-                      ? "Active"
-                      : "Inactive"}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedStore(store)}
-                    >
-                      Manage
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+              paginatedData.map((store, idx) => {
+                const isFeatured = featuredIds.has(store.storeId)
+                return (
+                  <TableRow key={idx}>
+                    <TableCell>{store.storeId}</TableCell>
+                    <TableCell>{store.name}</TableCell>
+                    <TableCell>{store.category}</TableCell>
+                    <TableCell>{store.phone}</TableCell>
+                    <TableCell>{store.email}</TableCell>
+                    <TableCell>{store.location}</TableCell>
+                    <TableCell>
+                      {store.isBlocked
+                        ? "Blocked"
+                        : store.isPaused
+                        ? "Paused"
+                        : store.isActive
+                        ? "Active"
+                        : "Inactive"}
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={isFeatured}
+                        onCheckedChange={(checked) =>
+                          handleToggleFeatured(store.storeId, checked)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedStore(store)}
+                      >
+                        Manage
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
+                <TableCell
+                  colSpan={9}
+                  className="text-center py-6 text-muted-foreground"
+                >
                   No stores found.
                 </TableCell>
               </TableRow>
@@ -147,13 +189,21 @@ function StoreTable() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
-          <Button variant="outline" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage((p) => p - 1)}
+            disabled={currentPage === 1}
+          >
             Previous
           </Button>
           <span className="text-sm text-muted-foreground">
             Page {currentPage} of {totalPages}
           </span>
-          <Button variant="outline" onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages}>
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage((p) => p + 1)}
+            disabled={currentPage === totalPages}
+          >
             Next
           </Button>
         </div>
@@ -161,7 +211,10 @@ function StoreTable() {
 
       {/* Store Management Sheet */}
       {selectedStore && (
-        <Sheet open={!!selectedStore} onOpenChange={() => setSelectedStore(null)}>
+        <Sheet
+          open={!!selectedStore}
+          onOpenChange={() => setSelectedStore(null)}
+        >
           <SheetContent className="w-full sm:w-[400px]">
             <SheetHeader>
               <SheetTitle>Manage Store: {selectedStore.name}</SheetTitle>
@@ -185,7 +238,10 @@ function StoreTable() {
       )}
 
       {/* Email Verification Dialog */}
-      <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
+      <Dialog
+        open={showVerificationDialog}
+        onOpenChange={setShowVerificationDialog}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Verify Email Address</DialogTitle>
@@ -211,7 +267,10 @@ function StoreTable() {
       </Dialog>
 
       {/* Store Creation Form Dialog */}
-      <Dialog open={showCreateFormDialog} onOpenChange={setShowCreateFormDialog}>
+      <Dialog
+        open={showCreateFormDialog}
+        onOpenChange={setShowCreateFormDialog}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Store Setup</DialogTitle>
@@ -220,37 +279,51 @@ function StoreTable() {
             <Input
               placeholder="Phone Number"
               value={storeForm.phone}
-              onChange={(e) => setStoreForm({ ...storeForm, phone: e.target.value })}
+              onChange={(e) =>
+                setStoreForm({ ...storeForm, phone: e.target.value })
+              }
             />
             <Input
               placeholder="Store Email"
               value={storeForm.storeEmail}
-              onChange={(e) => setStoreForm({ ...storeForm, storeEmail: e.target.value })}
+              onChange={(e) =>
+                setStoreForm({ ...storeForm, storeEmail: e.target.value })
+              }
             />
             <Input
               placeholder="Store Name"
               value={storeForm.name}
-              onChange={(e) => setStoreForm({ ...storeForm, name: e.target.value })}
+              onChange={(e) =>
+                setStoreForm({ ...storeForm, name: e.target.value })
+              }
             />
             <Input
               placeholder="Store Category"
               value={storeForm.category}
-              onChange={(e) => setStoreForm({ ...storeForm, category: e.target.value })}
+              onChange={(e) =>
+                setStoreForm({ ...storeForm, category: e.target.value })
+              }
             />
             <Input
               placeholder="Store Domain"
               value={storeForm.domain}
-              onChange={(e) => setStoreForm({ ...storeForm, domain: e.target.value })}
+              onChange={(e) =>
+                setStoreForm({ ...storeForm, domain: e.target.value })
+              }
             />
             <Input
               placeholder="Location"
               value={storeForm.location}
-              onChange={(e) => setStoreForm({ ...storeForm, location: e.target.value })}
+              onChange={(e) =>
+                setStoreForm({ ...storeForm, location: e.target.value })
+              }
             />
             <Input
               placeholder="UPI ID"
               value={storeForm.upi}
-              onChange={(e) => setStoreForm({ ...storeForm, upi: e.target.value })}
+              onChange={(e) =>
+                setStoreForm({ ...storeForm, upi: e.target.value })
+              }
             />
           </div>
           <DialogFooter className="mt-4">

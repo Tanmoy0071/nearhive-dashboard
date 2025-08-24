@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo } from "react"
+import React, { useMemo, useState, useTransition, useCallback } from "react"
 import {
   ColumnDef,
   flexRender,
@@ -16,7 +16,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   Table,
@@ -27,139 +26,161 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-import { useDebounce } from "@/hooks/useDebounce" // Adjust path if needed
+import { useDebounce } from "@/hooks/useDebounce"
+import {  useVerifiedCreatorsQuery } from "@/hooks/useFiresStoreQueries"
+import { CreatorsWaitinglist } from "@/types/backend/models"
+import RemoveCreator from "./RemoveCreator"
 
-type HiveUser = {
-  id: string
-  name: string
-  phoneNumber: string
-  email: string
-  link: string
-  aboutYourself: string
-  favouriteCuisine: string
-  favouriteRestaurant: string
-  favouriteFood: string
-}
 
 const truncate = (text: string, len = 25) =>
-  text.length > len ? text.slice(0, len) + "..." : text
+  (text ?? "").length > len ? (text ?? "").slice(0, len) + "..." : (text ?? "")
 
-const data: HiveUser[] = [
-  {
-    id: "1",
-    name: "Alice Johnson",
-    phoneNumber: "9876543210",
-    email: "alice@example.com",
-    link: "https://linkedin.com/in/alicejohnson",
-    aboutYourself:
-      "I am a passionate foodie who loves discovering new culinary experiences across cultures.",
-    favouriteCuisine:
-      "Mediterranean, South Indian, Thai, Korean BBQ, and fusion desserts.",
-    favouriteRestaurant: "The Spice Route",
-    favouriteFood: "Paneer Tikka",
-  },
-  {
-    id: "2",
-    name: "Bob Smith",
-    phoneNumber: "9123456789",
-    email: "bob@example.com",
-    link: "https://bobsmith.dev",
-    aboutYourself: "Love cooking and sharing recipes with my community.",
-    favouriteCuisine: "Italian",
-    favouriteRestaurant: "Mama Mia Ristorante",
-    favouriteFood: "Lasagna",
-  },
-]
+type DialogPayload = {
+  title: string
+  body: string
+} | null
 
-const columns: ColumnDef<HiveUser>[] = [
-  { accessorKey: "name", header: "Name" },
-  { accessorKey: "phoneNumber", header: "Phone Number" },
-  { accessorKey: "email", header: "Email" },
-  {
-    accessorKey: "link",
-    header: "Link",
-    cell: ({ row }) => {
-      const link = row.original.link
-      return (
-        <a
-          href={link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className=" underline"
-        >
-          Link
-        </a>
-      )
-    },
-  },
-  {
-    accessorKey: "aboutYourself",
-    header: "About Yourself",
-    cell: ({ row }) => {
-      const text = row.original.aboutYourself
-      return (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="link" className="p-0 h-auto">
-              {truncate(text)}
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>About {row.original.name}</DialogTitle>
-            </DialogHeader>
-            <p>{text}</p>
-          </DialogContent>
-        </Dialog>
-      )
-    },
-  },
-  {
-    accessorKey: "favouriteCuisine",
-    header: "Favourite Cuisine",
-    cell: ({ row }) => {
-      const text = row.original.favouriteCuisine
-      return (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="link" className="p-0 h-auto">
-              {truncate(text)}
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{row.original.name}'s Favourite Cuisine</DialogTitle>
-            </DialogHeader>
-            <p>{text}</p>
-          </DialogContent>
-        </Dialog>
-      )
-    },
-  },
-  { accessorKey: "favouriteRestaurant", header: "Favourite Restaurant" },
-  { accessorKey: "favouriteFood", header: "Favourite Food" },
-]
+export default function HiveTable() {
+  const { data: rawCreators = [] } = useVerifiedCreatorsQuery()
+  console.log(rawCreators)
 
-function HiveTable() {
+
+  const creators: (CreatorsWaitinglist & { _search: string; _cuisinesStr: string })[] =
+    useMemo(() => {
+      return rawCreators.map((c: any) => {
+        const cuisines: string[] = Array.isArray(c?.cuisines) ? c.cuisines : []
+        const name = c?.name ?? ""
+        const phone = c?.phone ?? ""
+        const email = c?.email ?? ""
+        const description = c?.description ?? ""
+        const store = c?.store ?? ""
+        const favfood = c?.favfood ?? ""
+        const social = c?.social ?? ""
+        const userId = c?.userId ?? ""
+
+        const cuisinesStr = cuisines.join(", ")
+        const haystack = [
+          name,
+          phone,
+          email,
+          description,
+          cuisinesStr,
+          store,
+          favfood,
+          social,
+        ]
+          .filter(Boolean)
+          .join(" | ")
+          .toLowerCase()
+
+        return {
+          cuisines,
+          description,
+          email,
+          favfood,
+          name,
+          phone,
+          social,
+          store,
+          userId,
+          _cuisinesStr: cuisinesStr,
+          _search: haystack,
+        }
+      })
+    }, [rawCreators])
+
+  // 2) Debounced search + transition to keep UI responsive.
   const [searchTerm, setSearchTerm] = useState("")
-  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const debounced = useDebounce(searchTerm, 500)
+  const [isPending, startTransition] = useTransition()
 
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value
+      startTransition(() => setSearchTerm(val))
+    },
+    []
+  )
+
+  // 3) Filter using prebuilt haystack (O(n), minimal allocations).
   const filteredData = useMemo(() => {
-    if (!debouncedSearchTerm.trim()) return data
+    const q = debounced.trim().toLowerCase()
+    if (!q) return creators
+    return creators.filter((u) => u._search.includes(q))
+  }, [debounced, creators])
 
-    const lower = debouncedSearchTerm.toLowerCase()
-    return data.filter((user) =>
-      [
-        user.name,
-        user.phoneNumber,
-        user.email,
-        user.aboutYourself,
-        user.favouriteCuisine,
-        user.favouriteRestaurant,
-        user.favouriteFood,
-      ].some((field) => field.toLowerCase().includes(lower))
-    )
-  }, [debouncedSearchTerm])
+  // 4) Single shared Dialog for heavy content.
+  const [dialogData, setDialogData] = useState<DialogPayload>(null)
+  const openDialog = useCallback((title: string, body: string) => {
+    setDialogData({ title, body })
+  }, [])
+  const closeDialog = useCallback(() => setDialogData(null), [])
+
+  // 5) Columns (no per-row Dialogs).
+  const columns: ColumnDef<CreatorsWaitinglist & { _cuisinesStr: string }>[] = useMemo(
+    () => [
+      { accessorKey: "name", header: "Name" },
+      { accessorKey: "phone", header: "Phone Number" },
+      { accessorKey: "email", header: "Email" },
+      {
+        accessorKey: "social",
+        header: "Link",
+        cell: ({ row }) => {
+          const link = row.original.social
+          return link ? (
+            <a href={link} target="_blank" rel="noopener noreferrer" className="underline">
+              Link
+            </a>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )
+        },
+      },
+      {
+        accessorKey: "description",
+        header: "About Yourself",
+        cell: ({ row }) => {
+          const text = row.original.description ?? ""
+          return (
+            <button
+              className="underline underline-offset-2 hover:opacity-80 text-left"
+              onClick={() => openDialog(`About ${row.original.name}`, text)}
+            >
+              {truncate(text)}
+            </button>
+          )
+        },
+      },
+      {
+        id: "cuisines",
+        header: "Favourite Cuisine",
+        cell: ({ row }) => {
+          const cuisines = row.original._cuisinesStr
+          return cuisines ? (
+            <button
+              className="underline underline-offset-2 hover:opacity-80 text-left"
+              onClick={() => openDialog(`${row.original.name}'s Favourite Cuisine`, cuisines)}
+            >
+              {truncate(cuisines)}
+            </button>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )
+        },
+      },
+      { accessorKey: "store", header: "Favourite Restaurant" },
+      { accessorKey: "favfood", header: "Favourite Food" },
+    {
+  id: "actions",
+  header: "Action",
+  cell: ({ row }) => (
+    <RemoveCreator userId={row.original.userId} />
+  ),
+},
+
+    ],
+    [openDialog]
+  )
 
   const table = useReactTable({
     data: filteredData,
@@ -170,80 +191,87 @@ function HiveTable() {
 
   return (
     <>
-    <h1 className="font-bold lg:text-3xl sm:text-sm mb-5 ml-4">Hive-Creators</h1>
-    <div className="p-4 space-y-4">
-      
-      <Input
-        placeholder="Search..."
-        className="max-w-sm"
-        value={searchTerm}
-        onChange={(e) => {
-          setSearchTerm(e.target.value)
-          table.setPageIndex(0)
-        }}
-      />
+      <h1 className="font-bold lg:text-3xl sm:text-sm mb-5 ml-4">
+        Hive-Creators
+      </h1>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
+      <div className="p-4 space-y-4">
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Search..."
+            className="max-w-sm"
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
+          {isPending && <span className="text-xs text-muted-foreground">Searching…</span>}
+        </div>
 
-          <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="text-center">
-                  No results found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+
+            <TableBody>
+              {table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="text-center">
+                    No results found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="flex justify-between items-center">
+          <Button
+            variant="outline"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+          </span>
+          <Button
+            variant="outline"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+        </div>
       </div>
 
-      <div className="flex justify-between items-center">
-        <Button
-          variant="outline"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Previous
-        </Button>
-        <span className="text-sm text-muted-foreground">
-          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-        </span>
-        <Button
-          variant="outline"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next
-        </Button>
-      </div>
-    </div>
+      {/* Single shared dialog */}
+      <Dialog open={!!dialogData} onOpenChange={(o) => (o ? null : closeDialog())}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dialogData?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="whitespace-pre-wrap">{dialogData?.body}</div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
-
-export default HiveTable

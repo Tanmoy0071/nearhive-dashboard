@@ -1,9 +1,9 @@
 "use client";
-import { ChartBarLabelCustom } from "@/components/orders/Barchart";
+// import { ChartBarLabelCustom } from "@/components/orders/Barchart";
 import { CancelledOrdersBox } from "@/components/orders/Cancelledorderbox";
-import { ChartPieSimple } from "@/components/orders/Cancelledvsdelivered";
-import { ChartBarMixed } from "@/components/orders/HighestLocations";
-import { ChartRadarDots } from "@/components/orders/Lateandfastdeliverycounts";
+// import { ChartPieSimple } from "@/components/orders/Cancelledvsdelivered";
+// import { ChartBarMixed } from "@/components/orders/HighestLocations";
+// import { ChartRadarDots } from "@/components/orders/Lateandfastdeliverycounts";
 import { DataTableDemo } from "@/components/orders/OrderTable";
 import React from "react";
 
@@ -17,18 +17,18 @@ function Orders() {
       <div className="grid md:grid-cols-3 gap-4 mt-4">
         {/* Option 1: Set individual heights using wrapper divs */}
 
-        <ChartBarLabelCustom />
+        {/* <ChartBarLabelCustom />
 
         <ChartPieSimple />
 
-        <ChartRadarDots />
+        <ChartRadarDots /> */}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
         <div className="md:col-span-2">
           <CancelledOrdersBox />
         </div>
         <div className="md:col-span-1">
-          <ChartBarMixed />
+          {/* <ChartBarMixed /> */}
         </div>
       </div>
 

@@ -96,13 +96,14 @@ export function DataTableDemo() {
       };
 
       // Determine latest status key (lex sort timestamps)
-      const latestStatusKey = Object.keys(order.status || {})
-        .sort(
-          (a, b) =>
-            toDate(order.status[a].timestamp).getTime() -
-            toDate(order.status[b].timestamp).getTime()
-        )
-        .pop();
+      const latestStatusKey = (Object.keys(order.status || {}) as (keyof typeof order.status)[])
+  .sort(
+    (a, b) =>
+      toDate(order.status[a]?.timestamp).getTime() -
+      toDate(order.status[b]?.timestamp).getTime()
+  )
+  .pop();
+
 
       const orderDate = toDate(order.orderAt);
 
@@ -111,8 +112,9 @@ export function DataTableDemo() {
         key.toLowerCase().includes("delivered")
       );
       const deliveredTimestamp = deliveredStatusKey
-        ? toDate(order.status[deliveredStatusKey].timestamp)
-        : null;
+  ? toDate(order.status[deliveredStatusKey as keyof typeof order.status]?.timestamp)
+  : null;
+
 
       // Calculate delivery time if possible
       let deliveryTime = "-";

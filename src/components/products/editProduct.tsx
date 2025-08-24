@@ -108,16 +108,16 @@ const toggleVariation = (variation: string) => {
 
   const getFinalPrice = (mrp: number, discount: number) => Math.ceil(mrp - (mrp * discount) / 100);
 
- const handleSave = async () => {
+const handleSave = async () => {
   if (!productName.trim()) return toast.error("Product name is required");
   if (!cuisine) return toast.error("Please select a cuisine");
 
   setLoading(true);
   try {
-    const variationsObj: Record<string, any> = {};
+    let variationsObj: Record<string, any> = {};
 
     if (hasVariations) {
-      // Only selected variations — remove default completely
+      // ✅ Only include selected variations — remove default entirely
       selectedVariations.forEach(v => {
         const { mrp, discount } = variationData[v] || { mrp: 0, discount: 0 };
         variationsObj[v] = {
@@ -128,22 +128,25 @@ const toggleVariation = (variation: string) => {
         };
       });
     } else {
-      // Keep only default if not using variations
-      variationsObj["default"] = {
-        mrp: globalMRP,
-        discount: globalDiscount,
-        price: getFinalPrice(globalMRP, globalDiscount),
-        stockQuantity: product.variations.default?.stockQuantity || 0,
+      // ✅ Single "default" variation only
+      variationsObj = {
+        default: {
+          mrp: globalMRP,
+          discount: globalDiscount,
+          price: getFinalPrice(globalMRP, globalDiscount),
+          stockQuantity: product.variations.default?.stockQuantity || 0,
+        },
       };
     }
 
-    await updateProduct(product, {
-      name: productName,
-      image: productImage || undefined,
-      cuisine: cuisine.heading,
-      type: foodType === "veg" ? "Veg" : "Non Veg",
-      variations: variationsObj, // overwrite completely — no default unless explicitly set
-    });
+  await updateProduct(product, {
+  name: productName,
+  image: productImage || undefined,
+  cuisine: cuisine.heading,
+  type: foodType === "veg" ? "Veg" : "Non Veg",
+  variations: variationsObj, // variationsObj built from selected only
+});
+
 
     toast.success("Product updated successfully!");
     onClose();
@@ -154,6 +157,7 @@ const toggleVariation = (variation: string) => {
     setLoading(false);
   }
 };
+
 
 
 

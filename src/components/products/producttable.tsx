@@ -44,6 +44,8 @@ import { Timestamp } from "firebase/firestore";
 
 import { toast } from "sonner";
 import EditProduct from "./editProduct";
+import AddToPlaylistSheet from "./AddPlaylist"
+
 
 const AddToCampaignSheet = dynamic(() => import("./AddToCampaignSheet"), {
   ssr: false,
@@ -62,6 +64,8 @@ export default function ProductTable() {
     Record<string, string>
   >({});
   const [activeProductId, setActiveProductId] = useState<string | null>(null);
+  const [playlistProductId, setPlaylistProductId] = useState<string | null>(null)
+
 
   const { data: products = [] } = useProductsQuery();
 
@@ -226,42 +230,38 @@ export default function ProductTable() {
       header: "Type",
       cell: ({ row }) => (row.original.type === "veg" ? "Veg" : "Non-Veg"),
     },
-    {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => {
-        const productId = row.original.productId;
+  {
+  id: "actions",
+  header: "Actions",
+  cell: ({ row }) => {
+    const productId = row.original.productId
+    return (
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm" onClick={() => setEditProduct(row.original)}>Edit</Button>
+        <Button variant="destructive" size="sm">Delete</Button>
+        <Button variant="secondary" size="sm" onClick={() => setActiveProductId(productId)}>
+          Add Campaign
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setPlaylistProductId(productId)}>
+          Add Playlist
+        </Button>
 
-        return (
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setEditProduct(row.original)}
-            >
-              Edit
-            </Button>
+        <AddToCampaignSheet
+          open={activeProductId === productId}
+          onClose={() => setActiveProductId(null)}
+          productId={productId}
+        />
 
-            <Button variant="destructive" size="sm">
-              Delete
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setActiveProductId(productId)}
-            >
-              Add Campaign
-            </Button>
+        <AddToPlaylistSheet
+          open={playlistProductId === productId}
+          onClose={() => setPlaylistProductId(null)}
+          productId={productId}
+        />
+      </div>
+    );
+  },
+}
 
-            <AddToCampaignSheet
-              open={activeProductId === productId}
-              onClose={() => setActiveProductId(null)}
-              productId={productId}
-            />
-          </div>
-        );
-      },
-    },
   ];
 
   const table = useReactTable({

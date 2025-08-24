@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import React, { useState, useMemo, useEffect } from "react"
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Table,
   TableHeader,
@@ -8,88 +8,78 @@ import {
   TableHead,
   TableBody,
   TableCell,
-} from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import { Calendar } from "@/components/ui/calendar"
-import { Switch } from "@/components/ui/switch"
-import { addDays, format, isWithinInterval, parseISO } from "date-fns"
-import { DateRange } from "react-day-picker"
+} from "@/components/ui/sheet";
+import { Calendar } from "@/components/ui/calendar";
+import { Switch } from "@/components/ui/switch";
+import { addDays, format, isWithinInterval, parseISO } from "date-fns";
+import { DateRange } from "react-day-picker";
 
+import { useMiddlemenQuery } from "@/hooks/useFiresStoreQueries";
+import { useOrdersQuery } from "@/hooks/useFiresStoreQueries";
 
-import { Middlemen } from "@/types/backend/models" 
-import { useMiddlemenQuery } from "@/hooks/useFiresStoreQueries"
+import { fetchMiddlemenEarning } from "@/services/middlemen";
+import { Middlemen, MiddlemenEarning, Order } from "@/types/backend/models";
 
 type MiddlemanInfo = {
-  dob: string
-  photo: string
-  email: string
-  dProof: string
-  vehicleReg: string
-  vehicleLicense: string
-  bankAcc: string
-  emergencyContact: string
-  aadhar: string
-  pan: string
-}
+  dob: string;
+  photo: string;
+  email: string;
+  dProof: string;
+  vehicleReg: string;
+  vehicleLicense: string;
+  bankAcc: string;
+  emergencyContact: string;
+  aadhar: string;
+  pan: string;
+};
 
 type Middleman = {
-  id: string
-  name: string
-  phone: string
-  successfulOrders: number
-  ranking: string
-  rating: number
-  totalAmount: number
-  status: boolean
-  totalEarnings: number
-  info: MiddlemanInfo
-}
-
-const sampleSales = [
-  {
-    product: "Chicken Cheese Pizza",
-    price: 179.1,
-    qty: 1,
-    time: "2025-07-10T19:09:00",
-    location: "Mahanta Bhawan, near s...",
-    payment: "Online Payment",
-    orderId: "ORD001",
-  },
-]
+  id: string;
+  name: string;
+  phone: string;
+  successfulOrders: number;
+  ranking: string;
+  rating: number;
+  totalAmount: number;
+  status: boolean;
+  totalEarnings: number;
+  info: MiddlemanInfo;
+};
 
 function MiddlemanTable() {
-  const [search, setSearch] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [manageSheet, setManageSheet] = useState(false)
-  const [salesDialog, setSalesDialog] = useState(false)
-  const [selectedMiddleman, setSelectedMiddleman] = useState<Middleman | null>(null)
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [manageSheet, setManageSheet] = useState(false);
+  const [salesDialog, setSalesDialog] = useState(false);
+  const [selectedMiddleman, setSelectedMiddleman] = useState<Middleman | null>(
+    null
+  );
+  const [earnings, setEarnings] = useState<MiddlemenEarning[]>([]);
 
   const [date, setDate] = useState<DateRange | undefined>({
     from: new Date(),
     to: addDays(new Date(), 0),
-  })
+  });
 
-
-
-  const { data: middlemenData, isLoading, error } = useMiddlemenQuery()
+  const { data: middlemenData, isLoading, error } = useMiddlemenQuery();
+  const { data: ordersData } = useOrdersQuery();
 
   const middlemen: Middleman[] = useMemo(() => {
-    if (!middlemenData) return []
-
-    console.log("Fetched Middlemen Data:", middlemenData)
+    if (!middlemenData) return [];
 
     return middlemenData.map((m: Middlemen): Middleman => ({
       id: m.middlemanId,
@@ -103,50 +93,82 @@ function MiddlemanTable() {
       totalEarnings: m.todayEarning,
       info: {
         dob: m.dateOfBirth,
-        photo: "", // Not available
+        photo: "",
         email: m.email,
         dProof: m.idProof,
         vehicleReg: m.vehicleRegistrationNumber,
-        vehicleLicense: "", // Not available
+        vehicleLicense: "",
         bankAcc: m.upiId,
         emergencyContact: m.emergencyContact,
         aadhar: m.idProof.includes("Aadhaar") ? m.idProof : "",
         pan: m.idProof.includes("PAN") ? m.idProof : "",
       },
-    }))
-  }, [middlemenData])
+    }));
+  }, [middlemenData]);
 
   const filtered = middlemen.filter((m) =>
     m.name.toLowerCase().includes(search.toLowerCase())
-  )
+  );
 
-  const totalPages = Math.ceil(filtered.length / 10)
+  const totalPages = Math.ceil(filtered.length / 10);
   const paginated = useMemo(() => {
-    const start = (currentPage - 1) * 10
-    return filtered.slice(start, start + 10)
-  }, [filtered, currentPage])
+    const start = (currentPage - 1) * 10;
+    return filtered.slice(start, start + 10);
+  }, [filtered, currentPage]);
 
   const handleToggleStatus = (id: string) => {
-    if (!middlemenData) return
     const updated = middlemen.map((m) =>
       m.id === id ? { ...m, status: !m.status } : m
-    )
+    );
     setSelectedMiddleman((prev) =>
       prev?.id === id ? { ...prev, status: !prev.status } : prev
-    )
-  }
+    );
+  };
 
-  const filteredSales = sampleSales.filter((sale) => {
-    if (!date?.from || !date?.to) return true
-    const time = parseISO(sale.time)
-    return isWithinInterval(time, {
-      start: date.from,
-      end: date.to,
-    })
-  })
+  // ✅ Combine Earnings + Orders
+  const combinedSales = useMemo(() => {
+    if (!ordersData || !earnings.length) return [];
 
-  if (isLoading) return <div className="p-4">Loading...</div>
-  if (error) return <div className="p-4 text-red-500">Error fetching data.</div>
+    return earnings
+      .map((earning) => {
+        const order = ordersData.find((o: Order) => o.orderId === earning.orderId);
+        if (!order) return null;
+
+        return {
+          ...earning,
+          order,
+        };
+      })
+      .filter(Boolean) as { earning: number; amount: number; date: string; orderId: string; order: Order }[];
+  }, [ordersData, earnings]);
+
+  // ✅ Filter by date range
+ const filteredSales = useMemo(() => {
+  if (!date?.from || !date?.to) return combinedSales; // ✅ Return all if date range not set
+
+  return combinedSales.filter((item) => {
+    const earningDate = parseISO(item.date);
+    return isWithinInterval(earningDate, {
+      start: date.from as Date, // ✅ Now guaranteed not undefined
+      end: date.to as Date,
+    });
+  });
+}, [combinedSales, date]);
+
+
+  // ✅ Calculate totals
+  const totalOrders = filteredSales.length;
+  const totalRevenue = filteredSales.reduce(
+    (sum, item) => sum + (item.order.totalAmount || 0),
+    0
+  );
+  const totalEarning = filteredSales.reduce(
+    (sum, item) => sum + (item.earning || 0),
+    0
+  );
+
+  if (isLoading) return <div className="p-4">Loading...</div>;
+  if (error) return <div className="p-4 text-red-500">Error fetching data.</div>;
 
   return (
     <div className="p-4">
@@ -155,8 +177,8 @@ function MiddlemanTable() {
           placeholder="Search middleman..."
           value={search}
           onChange={(e) => {
-            setSearch(e.target.value)
-            setCurrentPage(1)
+            setSearch(e.target.value);
+            setCurrentPage(1);
           }}
           className="w-64"
         />
@@ -167,12 +189,7 @@ function MiddlemanTable() {
             <TableHead>ID</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Phone</TableHead>
-            <TableHead>Successful Orders</TableHead>
-            <TableHead>Ranking</TableHead>
-            <TableHead>Rating</TableHead>
-            <TableHead>Total Amount (₹)</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Total Earning (₹)</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -183,10 +200,6 @@ function MiddlemanTable() {
                 <TableCell>{m.id}</TableCell>
                 <TableCell>{m.name}</TableCell>
                 <TableCell>{m.phone}</TableCell>
-                <TableCell>{m.successfulOrders}</TableCell>
-                <TableCell>{m.ranking}</TableCell>
-                <TableCell>{m.rating}</TableCell>
-                <TableCell>₹{m.totalAmount}</TableCell>
                 <TableCell>
                   <span
                     className={`text-sm font-medium px-2 py-1 rounded-full text-white ${
@@ -196,25 +209,40 @@ function MiddlemanTable() {
                     {m.status ? "Active" : "Inactive"}
                   </span>
                 </TableCell>
-                <TableCell>₹{m.totalEarnings}</TableCell>
                 <TableCell className="flex gap-2">
                   <Button
                     variant="outline"
                     onClick={() => {
-                      setSelectedMiddleman(m)
-                      setManageSheet(true)
+                      setSelectedMiddleman(m);
+                      setManageSheet(true);
                     }}
                   >
                     Manage
                   </Button>
                   <Button
-                    onClick={() => {
-                      setSelectedMiddleman(m)
-                      setSalesDialog(true)
-                    }}
-                  >
-                    Track Sales
-                  </Button>
+  onClick={async () => {
+    setSelectedMiddleman(m);
+    setSalesDialog(true);
+    try {
+      const data = await fetchMiddlemenEarning(m.id);
+
+      // ✅ Convert FirestoreData to MiddlemenEarning[]
+      const mappedData: MiddlemenEarning[] = data.map((doc: any) => ({
+        amount: doc.amount ?? 0,
+        date: doc.date ?? "",
+        earning: doc.earning ?? 0,
+        orderId: doc.orderId ?? "",
+      }));
+
+      setEarnings(mappedData);
+    } catch (err) {
+      console.error("Error fetching earnings:", err);
+    }
+  }}
+>
+  Track Sales
+</Button>
+
                 </TableCell>
               </TableRow>
             ))
@@ -247,6 +275,7 @@ function MiddlemanTable() {
         </Button>
       </div>
 
+      {/* ✅ Manage Sheet */}
       <Sheet open={manageSheet} onOpenChange={setManageSheet}>
         <SheetContent className="w-[300px] sm:w-[540px]">
           <SheetHeader>
@@ -276,8 +305,9 @@ function MiddlemanTable() {
         </SheetContent>
       </Sheet>
 
+      {/* ✅ Track Sales Dialog */}
       <Dialog open={salesDialog} onOpenChange={setSalesDialog}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-5xl">
           <DialogHeader>
             <DialogTitle>Track Sales for {selectedMiddleman?.name}</DialogTitle>
           </DialogHeader>
@@ -290,43 +320,56 @@ function MiddlemanTable() {
             />
           </div>
           <div className="py-2 font-semibold">
-            Total Orders: {filteredSales.length} | Total Revenue: ₹
-            {filteredSales.reduce((acc, s) => acc + s.price, 0).toFixed(2)}
+            Total Orders: {totalOrders} | Total Revenue: ₹
+            {totalRevenue.toFixed(2)} | Total Earnings: ₹
+            {totalEarning.toFixed(2)}
           </div>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Price</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Products</TableHead>
                 <TableHead>Qty</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead>Location</TableHead>
+                <TableHead>Total Amount</TableHead>
+                <TableHead>Earning</TableHead>
                 <TableHead>Payment</TableHead>
                 <TableHead>Order ID</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredSales.map((sale, i) => (
-                <TableRow key={i}>
-                  <TableCell>{sale.product}</TableCell>
-                  <TableCell>₹{sale.price}</TableCell>
-                  <TableCell>{sale.qty}</TableCell>
-                  <TableCell>{format(parseISO(sale.time), "hh:mm a")}</TableCell>
-                  <TableCell>{sale.location}</TableCell>
-                  <TableCell>
-                    <span className="text-xs bg-green-700 text-white px-2 py-0.5 rounded-full">
-                      {sale.payment}
-                    </span>
+              {filteredSales.length ? (
+                filteredSales.map((item, i) => (
+                  <TableRow key={i}>
+                    <TableCell>{format(parseISO(item.date), "dd/MM/yyyy")}</TableCell>
+                    <TableCell>
+                      {item.order.products.map((p) => p.name).join(", ")}
+                    </TableCell>
+                    <TableCell>
+                      {item.order.products.reduce((acc, p) => acc + p.quantity, 0)}
+                    </TableCell>
+                    <TableCell>₹{item.order.totalAmount}</TableCell>
+                    <TableCell>₹{item.earning}</TableCell>
+                    <TableCell>
+                      <span className="text-xs bg-green-700 text-white px-2 py-0.5 rounded-full">
+                        {item.order.paymentMethod}
+                      </span>
+                    </TableCell>
+                    <TableCell>{item.orderId}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center">
+                    No sales found
                   </TableCell>
-                  <TableCell>{sale.orderId}</TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
 
-export default MiddlemanTable
+export default MiddlemanTable;

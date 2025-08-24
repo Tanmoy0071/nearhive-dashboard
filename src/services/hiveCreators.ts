@@ -65,7 +65,7 @@ export async function removeCreator(userId: string) {
 
     const updatedUser: Partial<User> = {
         isCreator: false,
-        isWaiting: true
+        isWaiting: false
     }
 
     await FirestoreService.updateDoc("Users", userId, updatedUser)
